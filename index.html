@@ -566,9 +566,131 @@
         display: none;
       }
     }
+
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      background: linear-gradient(160deg, #e8e2d9 0%, var(--bg) 45%, #ebe4d8 100%);
+    }
+
+    .lock-screen[hidden] {
+      display: none !important;
+    }
+
+    .lock-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem 1.5rem;
+      box-shadow: 0 16px 48px rgba(44, 40, 37, 0.12);
+    }
+
+    .lock-card h1 {
+      font-size: 1.25rem;
+      margin: 0 0 0.35rem;
+      text-align: center;
+    }
+
+    .lock-card > p.sub {
+      margin: 0 0 1.25rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .lock-error {
+      color: var(--danger);
+      font-size: 0.88rem;
+      margin: 0 0 0.75rem;
+      padding: 0.5rem 0.65rem;
+      border-radius: 8px;
+      background: var(--danger-soft);
+      border: 1px solid #f0c8c8;
+    }
+
+    .lock-error[hidden] {
+      display: none !important;
+    }
+
+    .lock-forgot {
+      margin-top: 1rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .lock-forgot button.link {
+      background: none;
+      border: none;
+      color: var(--danger);
+      text-decoration: underline;
+      cursor: pointer;
+      font: inherit;
+      padding: 0;
+    }
+
+    #app-root[hidden] {
+      display: none !important;
+    }
+
+    .footer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      justify-content: center;
+      align-items: center;
+      margin-top: 0.35rem;
+    }
+
+    .footer-actions button {
+      font-size: 0.78rem;
+    }
   </style>
 </head>
 <body>
+  <div id="lock-screen" class="lock-screen" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+    <div class="lock-card">
+      <h1 id="lock-title">🔒 Accès protégé</h1>
+      <p class="sub">Récap tirage & biberon — saisissez le mot de passe pour continuer.</p>
+
+      <p id="lock-error" class="lock-error" role="alert" hidden></p>
+
+      <form id="form-lock-setup" hidden>
+        <p class="form-when-title" style="margin-bottom: 0.75rem">Première utilisation : choisissez un mot de passe</p>
+        <div style="margin-bottom: 0.75rem">
+          <label for="lock-setup-pw">Mot de passe</label>
+          <input type="password" id="lock-setup-pw" autocomplete="new-password" minlength="4" required />
+        </div>
+        <div style="margin-bottom: 1rem">
+          <label for="lock-setup-pw2">Confirmer</label>
+          <input type="password" id="lock-setup-pw2" autocomplete="new-password" minlength="4" required />
+        </div>
+        <button type="submit" class="primary" style="width: 100%">Enregistrer et accéder</button>
+      </form>
+
+      <form id="form-lock-login" hidden>
+        <div style="margin-bottom: 1rem">
+          <label for="lock-password">Mot de passe</label>
+          <input type="password" id="lock-password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="primary" style="width: 100%">Déverrouiller</button>
+      </form>
+
+      <div class="lock-forgot" id="lock-forgot-wrap" hidden>
+        <button type="button" class="link" id="btn-forgot-pwd">Mot de passe oublié ?</button>
+        <span style="display: block; margin-top: 0.35rem; font-size: 0.75rem">Réinitialise le mot de passe et <strong>supprime toutes les données</strong> de cette page.</span>
+      </div>
+    </div>
+  </div>
+
+  <main id="app-root" hidden>
   <div class="wrap">
     <header>
       <h1>Récapitulatif tirage & biberon</h1>
@@ -693,7 +815,41 @@
       </div>
     </section>
 
-    <footer>Données enregistrées dans ce navigateur (stockage local). Pensez à une sauvegarde si vous changez d’appareil.</footer>
+    <footer>
+      Données enregistrées dans ce navigateur (stockage local). Pensez à une sauvegarde si vous changez d’appareil.
+      <div class="footer-actions">
+        <button type="button" class="ghost" id="btn-change-password">Changer le mot de passe</button>
+        <button type="button" class="ghost" id="btn-lock-session">Verrouiller</button>
+      </div>
+    </footer>
+  </div>
+  </main>
+
+  <div class="modal-overlay" id="modal-change-pwd" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-change-pwd-title">
+      <h3 id="modal-change-pwd-title">Changer le mot de passe</h3>
+      <form id="form-change-pwd">
+        <div class="form-grid" style="margin-bottom: 0.75rem">
+          <div style="grid-column: 1 / -1;">
+            <label for="change-pwd-old">Mot de passe actuel</label>
+            <input type="password" id="change-pwd-old" autocomplete="current-password" required />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label for="change-pwd-new">Nouveau mot de passe</label>
+            <input type="password" id="change-pwd-new" autocomplete="new-password" minlength="4" required />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label for="change-pwd-new2">Confirmer le nouveau</label>
+            <input type="password" id="change-pwd-new2" autocomplete="new-password" minlength="4" required />
+          </div>
+        </div>
+        <p id="change-pwd-error" class="lock-error" hidden style="margin-bottom: 0.75rem"></p>
+        <div class="btn-row">
+          <button type="submit" class="primary">Enregistrer</button>
+          <button type="button" class="ghost" id="modal-change-pwd-cancel">Annuler</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="modal-overlay" id="modal-edit" aria-hidden="true">
@@ -754,8 +910,34 @@
       const STORAGE_KEY = "poupette_recap_lait_v1";
       const HISTORY_KEY = "poupette_recap_historique_v1";
       const NAMES_KEY = "poupette_recap_names_v1";
+      const PWD_HASH_KEY = "poupette_pwd_hash_v1";
+      const SESSION_KEY = "poupette_session_unlock_v1";
+      /** Mot de passe d’accès : EleonorePB (empreinte SHA-256, ne pas modifier sauf si vous changez le mot de passe) */
+      const PRESET_PASSWORD_HASH =
+        "19f5a6f5297200f374a656c90d65b34dd2d8b9c4955784e8d31eb1273d753fa0";
+
+      if (!localStorage.getItem(PWD_HASH_KEY)) {
+        localStorage.setItem(PWD_HASH_KEY, PRESET_PASSWORD_HASH);
+      }
 
       /** @typedef {{ id: string, date: string, time: string, tirage: number, biberon: number, note: string, createdAt: string }} Entry */
+
+      function bufferToHex(buf) {
+        return Array.from(new Uint8Array(buf))
+          .map(function (b) {
+            return b.toString(16).padStart(2, "0");
+          })
+          .join("");
+      }
+
+      async function hashPassword(pw) {
+        if (!window.crypto || !crypto.subtle || !crypto.subtle.digest) {
+          throw new Error("crypto");
+        }
+        const data = new TextEncoder().encode(pw);
+        const hash = await crypto.subtle.digest("SHA-256", data);
+        return bufferToHex(hash);
+      }
 
       function uid() {
         return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
@@ -1417,10 +1599,197 @@
         });
       });
 
-      ensureDemoDataIfEmpty();
-      renderTodayTable();
-      renderHistory();
-      renderDailyRecap();
+      const lockScreen = document.getElementById("lock-screen");
+      const appRoot = document.getElementById("app-root");
+      const formLockSetup = document.getElementById("form-lock-setup");
+      const formLockLogin = document.getElementById("form-lock-login");
+      const lockError = document.getElementById("lock-error");
+      const lockForgotWrap = document.getElementById("lock-forgot-wrap");
+
+      function setLockError(msg) {
+        if (!msg) {
+          lockError.hidden = true;
+          lockError.textContent = "";
+        } else {
+          lockError.textContent = msg;
+          lockError.hidden = false;
+        }
+      }
+
+      function configureLockUI() {
+        const hasPwd = !!localStorage.getItem(PWD_HASH_KEY);
+        formLockSetup.hidden = hasPwd;
+        formLockLogin.hidden = !hasPwd;
+        lockForgotWrap.hidden = !hasPwd;
+        setLockError("");
+        if (hasPwd) {
+          document.getElementById("lock-password").value = "";
+          document.getElementById("lock-password").focus();
+        } else {
+          document.getElementById("lock-setup-pw").value = "";
+          document.getElementById("lock-setup-pw2").value = "";
+          document.getElementById("lock-setup-pw").focus();
+        }
+      }
+
+      function unlockApp() {
+        lockScreen.hidden = true;
+        appRoot.hidden = false;
+      }
+
+      function lockApp() {
+        sessionStorage.removeItem(SESSION_KEY);
+        appRoot.hidden = true;
+        lockScreen.hidden = false;
+        configureLockUI();
+      }
+
+      function runAfterUnlock() {
+        ensureDemoDataIfEmpty();
+        renderTodayTable();
+        renderHistory();
+        renderDailyRecap();
+      }
+
+      formLockSetup.addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        setLockError("");
+        const a = document.getElementById("lock-setup-pw").value;
+        const b = document.getElementById("lock-setup-pw2").value;
+        if (a.length < 4) {
+          setLockError("Utilisez au moins 4 caractères.");
+          return;
+        }
+        if (a !== b) {
+          setLockError("Les deux mots de passe ne correspondent pas.");
+          return;
+        }
+        try {
+          const h = await hashPassword(a);
+          localStorage.setItem(PWD_HASH_KEY, h);
+          sessionStorage.setItem(SESSION_KEY, "1");
+          unlockApp();
+          runAfterUnlock();
+        } catch (err) {
+          setLockError(
+            "Impossible de sécuriser le mot de passe (navigateur trop ancien ou contexte non sécurisé)."
+          );
+        }
+      });
+
+      formLockLogin.addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        setLockError("");
+        const pw = document.getElementById("lock-password").value;
+        const stored = localStorage.getItem(PWD_HASH_KEY);
+        try {
+          const h = await hashPassword(pw);
+          if (h === stored) {
+            sessionStorage.setItem(SESSION_KEY, "1");
+            unlockApp();
+            runAfterUnlock();
+          } else {
+            setLockError("Mot de passe incorrect.");
+          }
+        } catch (err) {
+          setLockError("Erreur de vérification.");
+        }
+      });
+
+      document.getElementById("btn-forgot-pwd").addEventListener("click", function () {
+        openConfirm(
+          "Réinitialiser tout ?",
+          "Toutes les données (suivi, prénoms, journal) et le mot de passe seront effacés de ce navigateur. Irréversible.",
+          function () {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(HISTORY_KEY);
+            localStorage.removeItem(NAMES_KEY);
+            localStorage.removeItem(PWD_HASH_KEY);
+            sessionStorage.removeItem(SESSION_KEY);
+            setLockError("");
+            formLockLogin.hidden = true;
+            formLockSetup.hidden = false;
+            lockForgotWrap.hidden = true;
+            document.getElementById("lock-setup-pw").value = "";
+            document.getElementById("lock-setup-pw2").value = "";
+            document.getElementById("lock-setup-pw").focus();
+          }
+        );
+      });
+
+      document.getElementById("btn-lock-session").addEventListener("click", function () {
+        lockApp();
+      });
+
+      const modalChangePwd = document.getElementById("modal-change-pwd");
+      const changePwdErr = document.getElementById("change-pwd-error");
+
+      function openChangePwdModal() {
+        document.getElementById("change-pwd-old").value = "";
+        document.getElementById("change-pwd-new").value = "";
+        document.getElementById("change-pwd-new2").value = "";
+        changePwdErr.hidden = true;
+        changePwdErr.textContent = "";
+        modalChangePwd.classList.add("open");
+        modalChangePwd.setAttribute("aria-hidden", "false");
+        document.getElementById("change-pwd-old").focus();
+      }
+
+      function closeChangePwdModal() {
+        modalChangePwd.classList.remove("open");
+        modalChangePwd.setAttribute("aria-hidden", "true");
+      }
+
+      document.getElementById("btn-change-password").addEventListener("click", openChangePwdModal);
+      document.getElementById("modal-change-pwd-cancel").addEventListener("click", closeChangePwdModal);
+      modalChangePwd.addEventListener("click", function (ev) {
+        if (ev.target === modalChangePwd) closeChangePwdModal();
+      });
+
+      document.getElementById("form-change-pwd").addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        changePwdErr.hidden = true;
+        const oldPw = document.getElementById("change-pwd-old").value;
+        const newPw = document.getElementById("change-pwd-new").value;
+        const new2 = document.getElementById("change-pwd-new2").value;
+        const stored = localStorage.getItem(PWD_HASH_KEY);
+        if (newPw.length < 4) {
+          changePwdErr.textContent = "Le nouveau mot de passe doit faire au moins 4 caractères.";
+          changePwdErr.hidden = false;
+          return;
+        }
+        if (newPw !== new2) {
+          changePwdErr.textContent = "La confirmation ne correspond pas.";
+          changePwdErr.hidden = false;
+          return;
+        }
+        try {
+          const hOld = await hashPassword(oldPw);
+          if (hOld !== stored) {
+            changePwdErr.textContent = "Mot de passe actuel incorrect.";
+            changePwdErr.hidden = false;
+            return;
+          }
+          const hNew = await hashPassword(newPw);
+          localStorage.setItem(PWD_HASH_KEY, hNew);
+          closeChangePwdModal();
+        } catch (err) {
+          changePwdErr.textContent = "Erreur. Réessayez.";
+          changePwdErr.hidden = false;
+        }
+      });
+
+      if (sessionStorage.getItem(SESSION_KEY) === "1" && localStorage.getItem(PWD_HASH_KEY)) {
+        unlockApp();
+        runAfterUnlock();
+      } else {
+        if (sessionStorage.getItem(SESSION_KEY) === "1") {
+          sessionStorage.removeItem(SESSION_KEY);
+        }
+        appRoot.hidden = true;
+        lockScreen.hidden = false;
+        configureLockUI();
+      }
     })();
   </script>
 </body>
