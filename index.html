@@ -10,19 +10,29 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f6f3ef;
+      --bg: #f4f0ea;
       --surface: #fffefb;
-      --border: #e8e2d9;
-      --text: #2c2825;
-      --muted: #6b6560;
-      --accent: #c4a574;
+      --surface-muted: #faf7f3;
+      --border: #e4dcd2;
+      --border-strong: #d4cbc0;
+      --text: #2a2622;
+      --muted: #6a635c;
+      --accent: #b8955c;
       --accent-soft: #ebe4d8;
-      --tirage: #7eb8a8;
-      --biberon: #8fa8c4;
-      --danger: #c45c5c;
+      --tirage: #6ba896;
+      --tirage-soft: rgba(107, 168, 150, 0.14);
+      --biberon: #7d94b3;
+      --biberon-soft: rgba(125, 148, 179, 0.16);
+      --danger: #b85252;
       --danger-soft: #fdeaea;
-      --radius: 14px;
-      --shadow: 0 8px 32px rgba(44, 40, 37, 0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-pill: 999px;
+      --shadow-sm: 0 1px 3px rgba(42, 38, 34, 0.06);
+      --shadow: 0 8px 28px rgba(42, 38, 34, 0.08);
+      --shadow-lg: 0 20px 50px rgba(42, 38, 34, 0.12);
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+      --focus: 0 0 0 3px rgba(184, 149, 92, 0.35);
     }
 
     * {
@@ -33,57 +43,107 @@
       margin: 0;
       min-height: 100vh;
       font-family: "DM Sans", system-ui, sans-serif;
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 100% 60% at 50% -15%, rgba(184, 149, 92, 0.11), transparent 52%),
+        radial-gradient(ellipse 70% 45% at 100% 30%, rgba(107, 168, 150, 0.07), transparent 48%),
+        radial-gradient(ellipse 55% 40% at 0% 85%, rgba(125, 148, 179, 0.08), transparent 45%);
+      background-attachment: fixed;
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
     }
 
     .wrap {
-      max-width: 1100px;
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 1.5rem 1rem 3rem;
+      padding: clamp(1.25rem, 4vw, 2rem) clamp(1rem, 3vw, 1.5rem) clamp(2.5rem, 6vw, 3.5rem);
     }
 
     header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: clamp(1.5rem, 4vw, 2.25rem);
     }
 
     header h1 {
-      font-size: 1.5rem;
+      font-size: clamp(1.35rem, 3.5vw, 1.65rem);
       font-weight: 700;
-      margin: 0 0 0.35rem;
-      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+
+    header h1::after {
+      content: "";
+      display: block;
+      width: 2.75rem;
+      height: 3px;
+      margin: 0.75rem auto 0;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--tirage), var(--accent), var(--biberon));
+      opacity: 0.9;
     }
 
     header p {
       margin: 0;
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: 0.94rem;
+      max-width: 28rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .lead {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .lead strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .mb-075 {
+      margin-bottom: 0.75rem;
+    }
+
+    .mb-1 {
+      margin-bottom: 1rem;
     }
 
     .tabs {
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
+      gap: 0.35rem;
+      margin-bottom: 1.35rem;
       flex-wrap: wrap;
       justify-content: center;
+      padding: 0.4rem;
+      background: rgba(255, 254, 251, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-sm);
     }
 
     .tab {
-      padding: 0.65rem 1.25rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--surface);
+      padding: 0.55rem 1.1rem;
+      min-height: 2.5rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+      background: transparent;
       color: var(--muted);
       font: inherit;
+      font-size: 0.9rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+      transition: background 0.2s var(--ease), color 0.2s var(--ease), box-shadow 0.2s var(--ease), transform 0.15s var(--ease);
     }
 
     .tab:hover {
-      background: var(--accent-soft);
+      background: rgba(235, 228, 216, 0.65);
       color: var(--text);
     }
 
@@ -91,7 +151,16 @@
       background: var(--text);
       color: var(--surface);
       border-color: var(--text);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .tab[aria-selected="true"]:focus-visible {
+      box-shadow: var(--focus), var(--shadow-sm);
     }
 
     .panel {
@@ -100,43 +169,53 @@
 
     .panel.active {
       display: block !important;
-      animation: fade 0.25s ease;
+      animation: fadeIn 0.3s var(--ease);
     }
 
     section.panel[hidden] {
       display: none !important;
     }
 
-    @keyframes fade {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.25rem 1.35rem;
+      padding: 1.35rem 1.4rem;
       box-shadow: var(--shadow);
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.15rem;
+      transition: box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
     }
 
     .card h2 {
-      font-size: 1rem;
+      font-size: 1.02rem;
       font-weight: 600;
-      margin: 0 0 1rem;
+      margin: 0 0 1.05rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      letter-spacing: -0.02em;
     }
 
     .badge {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 600;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-      background: var(--accent-soft);
+      padding: 0.22rem 0.55rem;
+      border-radius: 7px;
+      background: linear-gradient(145deg, var(--accent-soft), #e5ddd0);
       color: var(--text);
+      border: 1px solid rgba(212, 203, 192, 0.6);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
     }
 
     .form-grid {
@@ -186,14 +265,14 @@
     }
 
     .field-block--tirage {
-      background: rgba(126, 184, 168, 0.12);
-      border-color: rgba(126, 184, 168, 0.45);
+      background: var(--tirage-soft);
+      border-color: rgba(107, 168, 150, 0.38);
       border-left: 4px solid var(--tirage);
     }
 
     .field-block--biberon {
-      background: rgba(143, 168, 196, 0.14);
-      border-color: rgba(143, 168, 196, 0.45);
+      background: var(--biberon-soft);
+      border-color: rgba(125, 148, 179, 0.4);
       border-left: 4px solid var(--biberon);
     }
 
@@ -205,11 +284,11 @@
     }
 
     .field-block--tirage .field-block-head {
-      color: #3d6b5e;
+      color: #2d5c4f;
     }
 
     .field-block--biberon .field-block-head {
-      color: #4a5f78;
+      color: #3d4f66;
     }
 
     .field-block-hint {
@@ -224,15 +303,13 @@
     }
 
     .field-block--tirage input[type="number"]:focus {
-      outline: 2px solid var(--tirage);
-      outline-offset: 1px;
       border-color: var(--tirage);
+      box-shadow: inset 0 1px 2px rgba(42, 38, 34, 0.04), 0 0 0 3px rgba(107, 168, 150, 0.28);
     }
 
     .field-block--biberon input[type="number"]:focus {
-      outline: 2px solid var(--biberon);
-      outline-offset: 1px;
       border-color: var(--biberon);
+      box-shadow: inset 0 1px 2px rgba(42, 38, 34, 0.04), 0 0 0 3px rgba(125, 148, 179, 0.28);
     }
 
     .form-note-wrap {
@@ -252,48 +329,89 @@
     input[type="date"],
     input[type="time"],
     input[type="number"],
-    input[type="text"] {
+    input[type="text"],
+    input[type="password"] {
       width: 100%;
-      padding: 0.6rem 0.75rem;
+      padding: 0.62rem 0.82rem;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       font: inherit;
-      background: #fff;
+      font-size: 0.95rem;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: inset 0 1px 2px rgba(42, 38, 34, 0.04);
+      transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+    }
+
+    input::placeholder {
+      color: #9a928a;
+      opacity: 1;
+    }
+
+    input:hover:not(:focus) {
+      border-color: var(--border-strong);
     }
 
     input:focus {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: inset 0 1px 2px rgba(42, 38, 34, 0.04), 0 0 0 3px rgba(184, 149, 92, 0.22);
+    }
+
+    input:focus-visible {
+      outline: none;
     }
 
     .btn-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.55rem;
+      align-items: center;
       margin-top: 1rem;
     }
 
+    button {
+      font-family: inherit;
+      transition: background 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.12s var(--ease), box-shadow 0.2s var(--ease);
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    button:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
     button.primary {
-      background: var(--text);
+      background: linear-gradient(180deg, #3a3531 0%, var(--text) 100%);
       color: var(--surface);
-      border: none;
-      padding: 0.65rem 1.2rem;
-      border-radius: 10px;
+      border: 1px solid #1f1c1a;
+      padding: 0.68rem 1.25rem;
+      border-radius: var(--radius-sm);
       font: inherit;
       font-weight: 600;
+      font-size: 0.92rem;
       cursor: pointer;
+      box-shadow: 0 2px 6px rgba(42, 38, 34, 0.15);
     }
 
     button.primary:hover {
-      opacity: 0.92;
+      filter: brightness(1.06);
+    }
+
+    button.primary:focus-visible {
+      box-shadow: var(--focus), 0 2px 6px rgba(42, 38, 34, 0.15);
     }
 
     button.ghost {
-      background: transparent;
+      background: rgba(255, 254, 251, 0.6);
       border: 1px solid var(--border);
-      padding: 0.5rem 0.9rem;
-      border-radius: 10px;
+      padding: 0.52rem 0.95rem;
+      border-radius: var(--radius-sm);
       font: inherit;
+      font-size: 0.88rem;
       cursor: pointer;
       color: var(--muted);
     }
@@ -301,74 +419,127 @@
     button.ghost:hover {
       background: var(--accent-soft);
       color: var(--text);
+      border-color: var(--border-strong);
     }
 
     button.danger {
-      background: var(--danger-soft);
+      background: linear-gradient(180deg, #fff5f5, var(--danger-soft));
       color: var(--danger);
-      border: 1px solid #f0c8c8;
+      border: 1px solid #e8b8b8;
+    }
+
+    button.danger:hover {
+      background: #fde4e4;
     }
 
     button.small {
-      padding: 0.35rem 0.65rem;
-      font-size: 0.85rem;
+      padding: 0.38rem 0.68rem;
+      font-size: 0.84rem;
+    }
+
+    button.btn-block {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .totaux {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.1rem;
     }
 
     .total-box {
-      padding: 0.85rem 1rem;
-      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border);
+      background: linear-gradient(165deg, var(--surface) 0%, var(--surface-muted) 100%);
+      box-shadow: var(--shadow-sm);
     }
 
-    .total-box.tirage { border-left: 4px solid var(--tirage); }
-    .total-box.biberon { border-left: 4px solid var(--biberon); }
+    .total-box.tirage {
+      border-left: 4px solid var(--tirage);
+    }
+
+    .total-box.biberon {
+      border-left: 4px solid var(--biberon);
+    }
 
     .total-box span {
       display: block;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
     }
 
     .total-box strong {
-      font-size: 1.35rem;
+      font-size: 1.38rem;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      margin: 0 -0.15rem;
+      padding: 0 0.15rem 0.15rem;
+      -webkit-overflow-scrolling: touch;
+      border-radius: var(--radius-sm);
+    }
+
+    .table-scroll table {
+      min-width: 100%;
     }
 
     table {
       width: 100%;
-      border-collapse: collapse;
-      font-size: 0.92rem;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.91rem;
     }
 
-    th, td {
+    th,
+    td {
       text-align: left;
-      padding: 0.65rem 0.5rem;
+      padding: 0.7rem 0.55rem;
       border-bottom: 1px solid var(--border);
     }
 
-    th {
-      font-size: 0.72rem;
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: linear-gradient(180deg, var(--surface-muted), #f3ede6);
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.07em;
       color: var(--muted);
       font-weight: 600;
+      border-bottom: 1px solid var(--border-strong);
     }
 
-    tr:last-child td {
+    thead th:first-child {
+      border-radius: var(--radius-sm) 0 0 0;
+    }
+
+    thead th:last-child {
+      border-radius: 0 var(--radius-sm) 0 0;
+    }
+
+    tbody tr {
+      transition: background 0.15s var(--ease);
+    }
+
+    tbody tr:hover td {
+      background: rgba(107, 168, 150, 0.04);
+    }
+
+    tbody tr:last-child td {
       border-bottom: none;
-    }
-
-    tr:hover td {
-      background: rgba(0, 0, 0, 0.02);
     }
 
     .cell-actions {
@@ -378,8 +549,14 @@
 
     .empty {
       text-align: center;
-      padding: 2rem 1rem;
+      padding: 2.25rem 1.25rem;
       color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      background: var(--surface-muted);
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border);
+      margin-top: 0.5rem;
     }
 
     .history-two-col {
@@ -399,11 +576,21 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.1rem 1.15rem 1.25rem;
+      padding: 1.15rem 1.2rem 1.3rem;
       box-shadow: var(--shadow);
       min-height: 120px;
       max-height: min(70vh, 720px);
       overflow-y: auto;
+      scrollbar-color: var(--border-strong) transparent;
+    }
+
+    .history-column::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .history-column::-webkit-scrollbar-thumb {
+      background: var(--border-strong);
+      border-radius: 4px;
     }
 
     .history-column h3 {
@@ -423,11 +610,11 @@
     }
 
     .history-column.biberon-col .history-sub {
-      color: #5a6d86;
+      color: #4a5d75;
     }
 
     .history-column.tirage-col .history-sub {
-      color: #4d7a6e;
+      color: #3a6b5c;
     }
 
     .history-column .history-count {
@@ -444,11 +631,11 @@
     }
 
     .history-column.biberon-col .history-count strong {
-      color: #4a5f78;
+      color: #3d4f66;
     }
 
     .history-column.tirage-col .history-count strong {
-      color: #3d6b5e;
+      color: #2d5c4f;
     }
 
     ul.history-list {
@@ -499,15 +686,19 @@
     }
 
     .names-row input {
-      width: 9rem;
-      padding: 0.35rem 0.5rem;
+      width: 9.5rem;
+      max-width: 100%;
+      padding: 0.45rem 0.6rem;
       font-size: 0.88rem;
+      border-radius: 8px;
     }
 
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(44, 40, 37, 0.45);
+      background: rgba(36, 32, 28, 0.48);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -515,7 +706,7 @@
       z-index: 100;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity 0.25s var(--ease);
     }
 
     .modal-overlay.open {
@@ -526,20 +717,28 @@
     .modal {
       background: var(--surface);
       border-radius: var(--radius);
-      padding: 1.35rem;
-      max-width: 420px;
+      padding: 1.45rem 1.4rem;
+      max-width: 430px;
       width: 100%;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-lg);
       border: 1px solid var(--border);
+      transform: scale(0.97);
+      transition: transform 0.25s var(--ease);
+    }
+
+    .modal-overlay.open .modal {
+      transform: scale(1);
     }
 
     .modal h3 {
       margin: 0 0 1rem;
-      font-size: 1.1rem;
+      font-size: 1.08rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
     }
 
     .modal .form-grid {
-      margin-bottom: 0.5rem;
+      margin-bottom: 0;
     }
 
     .modal .form-volumes-split {
@@ -560,27 +759,46 @@
 
     footer {
       text-align: center;
-      margin-top: 2rem;
+      margin-top: 2.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
       font-size: 0.8rem;
       color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .grid-span-full {
+      grid-column: 1 / -1;
+    }
+
+    .chart-section-title {
+      font-size: 0.93rem;
+      font-weight: 600;
+      margin: 0 0 0.55rem;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .chart-section-title:first-of-type {
+      margin-top: 0;
     }
 
     th.col-tirage {
-      color: #3d6b5e;
-      border-bottom-color: rgba(126, 184, 168, 0.5);
+      color: #2d5c4f;
+      border-bottom-color: rgba(107, 168, 150, 0.45);
     }
 
     th.col-biberon {
-      color: #4a5f78;
-      border-bottom-color: rgba(143, 168, 196, 0.55);
+      color: #3d4f66;
+      border-bottom-color: rgba(125, 148, 179, 0.48);
     }
 
     td.col-tirage {
-      border-left: 2px solid rgba(126, 184, 168, 0.35);
+      border-left: 2px solid rgba(107, 168, 150, 0.32);
     }
 
     td.col-biberon {
-      border-left: 2px solid rgba(143, 168, 196, 0.35);
+      border-left: 2px solid rgba(125, 148, 179, 0.32);
     }
 
     .recap-jour-table th,
@@ -609,7 +827,9 @@
       align-items: center;
       justify-content: center;
       padding: 1.25rem;
-      background: linear-gradient(160deg, #e8e2d9 0%, var(--bg) 45%, #ebe4d8 100%);
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(184, 149, 92, 0.15), transparent 55%),
+        linear-gradient(165deg, #e5ddd4 0%, var(--bg) 42%, #ebe4d8 100%);
     }
 
     .lock-screen[hidden] {
@@ -618,12 +838,20 @@
 
     .lock-card {
       width: 100%;
-      max-width: 400px;
+      max-width: 408px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.75rem 1.5rem;
-      box-shadow: 0 16px 48px rgba(44, 40, 37, 0.12);
+      padding: 1.85rem 1.55rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .lock-field {
+      margin-bottom: 0.85rem;
+    }
+
+    .lock-form-intro {
+      margin-bottom: 0.85rem;
     }
 
     .lock-card h1 {
@@ -660,14 +888,33 @@
       text-align: center;
     }
 
+    .lock-forgot-note {
+      display: block;
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
     .lock-forgot button.link {
       background: none;
       border: none;
       color: var(--danger);
       text-decoration: underline;
+      text-underline-offset: 2px;
       cursor: pointer;
       font: inherit;
       padding: 0;
+      border-radius: 3px;
+    }
+
+    .lock-forgot button.link:hover {
+      color: #9a3d3d;
+    }
+
+    .lock-forgot button.link:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
     }
 
     #app-root[hidden] {
@@ -677,14 +924,14 @@
     .footer-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem 1rem;
+      gap: 0.55rem 0.85rem;
       justify-content: center;
       align-items: center;
-      margin-top: 0.35rem;
+      margin-top: 0.65rem;
     }
 
     .footer-actions button {
-      font-size: 0.78rem;
+      font-size: 0.8rem;
     }
 
     .lock-remember {
@@ -723,14 +970,20 @@
       font-size: 0.86rem;
       color: var(--muted);
       margin-bottom: 1rem;
-      padding: 0.75rem;
-      border-radius: 10px;
-      background: var(--accent-soft);
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(145deg, var(--accent-soft), #e8e0d4);
       border: 1px solid var(--border);
+      line-height: 1.5;
     }
 
     .sync-firebase-hint code {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
+      padding: 0.12rem 0.35rem;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid var(--border);
+      word-break: break-all;
     }
 
     .sync-status-line {
@@ -738,6 +991,118 @@
       font-size: 0.85rem;
       color: var(--muted);
       min-height: 1.35em;
+    }
+
+    .volume-shortcuts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+    }
+
+    .volume-shortcuts .shortcut-ml {
+      min-width: 2.35rem;
+      min-height: 2rem;
+      padding: 0.32rem 0.42rem;
+      font-size: 0.74rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.1s var(--ease);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .volume-shortcuts .shortcut-ml:hover {
+      border-color: var(--border-strong);
+    }
+
+    .volume-shortcuts .shortcut-ml:active {
+      transform: scale(0.96);
+    }
+
+    .volume-shortcuts .shortcut-ml:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .field-block--tirage .shortcut-ml:hover {
+      background: rgba(107, 168, 150, 0.18);
+      border-color: var(--tirage);
+    }
+
+    .field-block--biberon .shortcut-ml:hover {
+      background: rgba(125, 148, 179, 0.2);
+      border-color: var(--biberon);
+    }
+
+    .chart-mode-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+    }
+
+    .chart-mode-bar button {
+      padding: 0.48rem 1rem;
+      min-height: 2.35rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      background: rgba(255, 254, 251, 0.85);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease);
+    }
+
+    .chart-mode-bar button:hover {
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .chart-mode-bar button[aria-pressed="true"] {
+      background: var(--text);
+      color: var(--surface);
+      border-color: var(--text);
+    }
+
+    .chart-mode-bar button:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .chart-canvas-wrap {
+      position: relative;
+      height: 260px;
+      width: 100%;
+      margin-bottom: 1.35rem;
+      padding: 0.5rem 0.35rem 0.15rem;
+      background: linear-gradient(180deg, var(--surface-muted), var(--surface));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .chart-canvas-wrap.small {
+      height: 220px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .panel.active {
+        animation: none;
+      }
+
+      .modal-overlay {
+        transition: none;
+      }
+
+      .modal-overlay.open .modal {
+        transform: none;
+      }
     }
   </style>
 </head>
@@ -761,8 +1126,8 @@
           tabindex="-1"
           aria-hidden="true"
         />
-        <p class="form-when-title" style="margin-bottom: 0.75rem">Première utilisation : choisissez un mot de passe</p>
-        <div style="margin-bottom: 0.75rem">
+        <p class="form-when-title lock-form-intro">Première utilisation : choisissez un mot de passe</p>
+        <div class="lock-field">
           <label for="lock-setup-pw">Mot de passe</label>
           <input
             type="password"
@@ -774,7 +1139,7 @@
             inputmode="text"
           />
         </div>
-        <div style="margin-bottom: 0.75rem">
+        <div class="lock-field">
           <label for="lock-setup-pw2">Confirmer</label>
           <input
             type="password"
@@ -790,7 +1155,7 @@
           <input type="checkbox" id="lock-remember-setup" />
           <span>Rester connecté sur cet appareil (ne pas redemander le mot de passe à la prochaine ouverture)</span>
         </label>
-        <button type="submit" class="primary" style="width: 100%">Enregistrer et accéder</button>
+        <button type="submit" class="primary btn-block">Enregistrer et accéder</button>
       </form>
 
       <form id="form-lock-login" hidden method="post" action="#" autocomplete="on">
@@ -805,7 +1170,7 @@
           tabindex="-1"
           aria-hidden="true"
         />
-        <div style="margin-bottom: 0.75rem">
+        <div class="lock-field">
           <label for="lock-password">Mot de passe</label>
           <input
             type="password"
@@ -820,12 +1185,12 @@
           <input type="checkbox" id="lock-remember-login" />
           <span>Rester connecté sur cet appareil (ne pas redemander le mot de passe à la prochaine ouverture)</span>
         </label>
-        <button type="submit" class="primary" style="width: 100%">Déverrouiller</button>
+        <button type="submit" class="primary btn-block">Déverrouiller</button>
       </form>
 
       <div class="lock-forgot" id="lock-forgot-wrap" hidden>
         <button type="button" class="link" id="btn-forgot-pwd">Mot de passe oublié ?</button>
-        <span style="display: block; margin-top: 0.35rem; font-size: 0.75rem">Réinitialise le mot de passe et <strong>supprime toutes les données</strong> de cette page.</span>
+        <span class="lock-forgot-note">Réinitialise le mot de passe et <strong>supprime toutes les données</strong> de cette page.</span>
       </div>
     </div>
   </div>
@@ -841,6 +1206,7 @@
       <button type="button" class="tab" role="tab" id="tab-aujourdhui" aria-selected="true" aria-controls="panel-aujourdhui">Aujourd’hui</button>
       <button type="button" class="tab" role="tab" id="tab-historique" aria-selected="false" aria-controls="panel-historique">Historique</button>
       <button type="button" class="tab" role="tab" id="tab-recap-jour" aria-selected="false" aria-controls="panel-recap-jour">Totaux par jour</button>
+      <button type="button" class="tab" role="tab" id="tab-graphiques" aria-selected="false" aria-controls="panel-graphiques">Graphiques</button>
       <button type="button" class="tab" role="tab" id="tab-sync" aria-selected="false" aria-controls="panel-sync">Partage</button>
     </div>
 
@@ -865,12 +1231,14 @@
               <p class="field-block-hint" id="hint-add-tirage">Volume de <strong>lait exprimé</strong> avec le tire-lait — pas le biberon.</p>
               <label for="add-tirage">Millilitres tirés</label>
               <input type="number" id="add-tirage" name="tirage" min="0" step="1" placeholder="0" value="" inputmode="numeric" aria-describedby="hint-add-tirage" />
+              <div class="volume-shortcuts" data-volume-for="add-tirage" role="group" aria-label="Choisir le volume en millilitres (tirage)"></div>
             </div>
             <div class="field-block field-block--biberon">
               <div class="field-block-head">🍼 Biberon</div>
               <p class="field-block-hint" id="hint-add-biberon">Volume de <strong>lait bu</strong> au biberon par le bébé.</p>
               <label for="add-biberon">Millilitres au biberon</label>
               <input type="number" id="add-biberon" name="biberon" min="0" step="1" placeholder="0" value="" inputmode="numeric" aria-describedby="hint-add-biberon" />
+              <div class="volume-shortcuts" data-volume-for="add-biberon" role="group" aria-label="Choisir le volume en millilitres (biberon)"></div>
             </div>
           </div>
           <div class="form-note-wrap">
@@ -897,7 +1265,7 @@
           </div>
         </div>
 
-        <div style="overflow-x: auto;">
+        <div class="table-scroll">
           <table>
             <thead>
               <tr>
@@ -918,14 +1286,14 @@
     <section id="panel-historique" class="panel" role="tabpanel" aria-labelledby="tab-historique" hidden>
       <div class="card">
         <h2>Historique</h2>
-        <p style="margin: 0 0 0.75rem; color: var(--muted); font-size: 0.92rem;">
+        <p class="lead">
           Deux listes comme votre suivi : biberons et tirages, du plus ancien au plus récent. Modifier ou supprimer agit sur la ligne complète (même horaire).
         </p>
         <div class="names-row" aria-label="Prénoms affichés dans les titres">
           <label>🍼 Prénom biberons <input type="text" id="name-biberon" maxlength="40" autocomplete="given-name" /></label>
           <label>🤱 Prénom tirages <input type="text" id="name-tirage" maxlength="40" autocomplete="given-name" /></label>
         </div>
-        <div class="btn-row" style="margin-bottom: 1rem;">
+        <div class="btn-row mb-1">
           <button type="button" class="primary" id="btn-load-demo">Charger la démo (maquette 23–25 mars)</button>
           <button type="button" class="ghost danger" id="btn-clear-all">Tout effacer (données locales)</button>
         </div>
@@ -937,10 +1305,10 @@
     <section id="panel-recap-jour" class="panel" role="tabpanel" aria-labelledby="tab-recap-jour" hidden>
       <div class="card">
         <h2>Totaux par jour</h2>
-        <p style="margin: 0 0 1rem; color: var(--muted); font-size: 0.92rem;">
+        <p class="lead">
           Par jour : <strong>nombre de séances</strong> (chiffres) et <strong>volumes en ml</strong> (sans détail des heures).
         </p>
-        <div style="overflow-x: auto;">
+        <div class="table-scroll">
           <table class="recap-jour-table">
             <thead>
               <tr>
@@ -958,33 +1326,54 @@
       </div>
     </section>
 
+    <section id="panel-graphiques" class="panel" role="tabpanel" aria-labelledby="tab-graphiques" hidden>
+      <div class="card">
+        <h2>Graphiques</h2>
+        <p class="lead">
+          Courbes des <strong>volumes (ml)</strong> et du <strong>nombre de prises</strong> par jour (ou par semaine, semaine commençant le lundi).
+        </p>
+        <div class="chart-mode-bar" role="group" aria-label="Échelle du graphique">
+          <button type="button" id="chart-mode-day" aria-pressed="true">Par jour</button>
+          <button type="button" id="chart-mode-week" aria-pressed="false">Par semaine</button>
+        </div>
+        <h3 class="chart-section-title">Volumes totaux (ml)</h3>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart-ml" aria-label="Graphique des volumes tirage et biberon"></canvas>
+        </div>
+        <h3 class="chart-section-title">Nombre de prises</h3>
+        <div class="chart-canvas-wrap small">
+          <canvas id="chart-prises" aria-label="Graphique du nombre de tirages et de biberons"></canvas>
+        </div>
+      </div>
+    </section>
+
     <section id="panel-sync" class="panel" role="tabpanel" aria-labelledby="tab-sync" hidden>
       <div class="card">
         <h2>Synchronisation en direct</h2>
-        <p style="margin: 0 0 0.75rem; color: var(--muted); font-size: 0.92rem;">
+        <p class="lead mb-075">
           Chaque appareil garde une copie locale : pour que <strong>tout le monde voie les ajouts en temps réel</strong>, activez un salon partagé (même code sur tous les téléphones). Sinon vous pouvez échanger un <strong>fichier JSON</strong>.
         </p>
         <div class="sync-firebase-hint" id="sync-firebase-missing" hidden>
           <strong>Configuration requise :</strong> créez un projet Firebase (gratuit), activez la Realtime Database, puis renseignez <code>FIREBASE_CONFIG</code> en haut du script dans ce fichier HTML (voir commentaires dans le code).
         </div>
-        <div class="form-grid" style="margin-bottom: 0.75rem">
-          <div style="grid-column: 1 / -1;">
+        <div class="form-grid mb-075">
+          <div class="grid-span-full">
             <label for="sync-room-code">Code salon (identique pour toute la famille)</label>
             <input type="text" id="sync-room-code" placeholder="ex: famille-poupette-2026" maxlength="64" autocomplete="off" />
           </div>
         </div>
-        <label class="lock-remember" style="margin-bottom: 0.75rem">
+        <label class="lock-remember mb-075">
           <input type="checkbox" id="sync-enabled" />
           <span>Activer la synchro en ligne (temps réel via le cloud)</span>
         </label>
-        <div class="btn-row" style="margin-bottom: 0.75rem">
+        <div class="btn-row mb-075">
           <button type="button" class="primary" id="btn-sync-apply">Enregistrer et connecter</button>
         </div>
         <p id="sync-status" class="sync-status-line" aria-live="polite"></p>
       </div>
       <div class="card">
         <h2>Fichier JSON (sans cloud)</h2>
-        <p style="margin: 0 0 0.75rem; color: var(--muted); font-size: 0.92rem;">
+        <p class="lead mb-075">
           <strong>Exporter</strong> : sauvegarde toutes les données dans un fichier. <strong>Importer</strong> : fusionne ou remplace selon le fichier (à envoyer par mail, Drive, etc.).
         </p>
         <div class="btn-row">
@@ -1009,21 +1398,21 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-change-pwd-title">
       <h3 id="modal-change-pwd-title">Changer le mot de passe</h3>
       <form id="form-change-pwd">
-        <div class="form-grid" style="margin-bottom: 0.75rem">
-          <div style="grid-column: 1 / -1;">
+        <div class="form-grid mb-075">
+          <div class="grid-span-full">
             <label for="change-pwd-old">Mot de passe actuel</label>
             <input type="password" id="change-pwd-old" autocomplete="current-password" required />
           </div>
-          <div style="grid-column: 1 / -1;">
+          <div class="grid-span-full">
             <label for="change-pwd-new">Nouveau mot de passe</label>
             <input type="password" id="change-pwd-new" autocomplete="new-password" minlength="4" required />
           </div>
-          <div style="grid-column: 1 / -1;">
+          <div class="grid-span-full">
             <label for="change-pwd-new2">Confirmer le nouveau</label>
             <input type="password" id="change-pwd-new2" autocomplete="new-password" minlength="4" required />
           </div>
         </div>
-        <p id="change-pwd-error" class="lock-error" hidden style="margin-bottom: 0.75rem"></p>
+        <p id="change-pwd-error" class="lock-error mb-075" hidden></p>
         <div class="btn-row">
           <button type="submit" class="primary">Enregistrer</button>
           <button type="button" class="ghost" id="modal-change-pwd-cancel">Annuler</button>
@@ -1054,12 +1443,14 @@
             <p class="field-block-hint" id="hint-edit-tirage">Lait exprimé au tire-lait (ml).</p>
             <label for="edit-tirage">Millilitres tirés</label>
             <input type="number" id="edit-tirage" min="0" step="1" inputmode="numeric" aria-describedby="hint-edit-tirage" />
+            <div class="volume-shortcuts" data-volume-for="edit-tirage" role="group" aria-label="Choisir le volume en millilitres (tirage)"></div>
           </div>
           <div class="field-block field-block--biberon">
             <div class="field-block-head">🍼 Biberon</div>
             <p class="field-block-hint" id="hint-edit-biberon">Lait bu au biberon (ml).</p>
             <label for="edit-biberon">Millilitres au biberon</label>
             <input type="number" id="edit-biberon" min="0" step="1" inputmode="numeric" aria-describedby="hint-edit-biberon" />
+            <div class="volume-shortcuts" data-volume-for="edit-biberon" role="group" aria-label="Choisir le volume en millilitres (biberon)"></div>
           </div>
         </div>
         <div class="form-note-wrap">
@@ -1087,6 +1478,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
     (function () {
       /**
@@ -1120,6 +1512,9 @@
       let applyingRemote = false;
       let cloudPushTimer = null;
       let firebaseSyncFirstSnapshot = true;
+      let chartMode = "day";
+      let chartMlInstance = null;
+      let chartPrisesInstance = null;
       /** Mot de passe d’accès : EleonorePB (empreinte SHA-256, ne pas modifier sauf si vous changez le mot de passe) */
       const PRESET_PASSWORD_HASH =
         "19f5a6f5297200f374a656c90d65b34dd2d8b9c4955784e8d31eb1273d753fa0";
@@ -1539,6 +1934,217 @@
         return ddmm + " " + hm + " — " + ml + " ml";
       }
 
+      function mondayOfWeek(isoDate) {
+        const parts = isoDate.split("-").map(Number);
+        const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+        const dow = dt.getDay();
+        const diff = dow === 0 ? -6 : 1 - dow;
+        dt.setDate(dt.getDate() + diff);
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, "0");
+        const dd = String(dt.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + dd;
+      }
+
+      function aggregateByDayForCharts(entries) {
+        const byDay = {};
+        entries.forEach(function (e) {
+          if (!e.date) return;
+          if (!byDay[e.date]) {
+            byDay[e.date] = { tirageMl: 0, biberonMl: 0, nbTirage: 0, nbBiberon: 0 };
+          }
+          const t = Number(e.tirage) || 0;
+          const b = Number(e.biberon) || 0;
+          byDay[e.date].tirageMl += t;
+          byDay[e.date].biberonMl += b;
+          if (t > 0) byDay[e.date].nbTirage++;
+          if (b > 0) byDay[e.date].nbBiberon++;
+        });
+        return byDay;
+      }
+
+      function aggregateByWeekForCharts(entries) {
+        const byWeek = {};
+        entries.forEach(function (e) {
+          if (!e.date) return;
+          const mon = mondayOfWeek(e.date);
+          if (!byWeek[mon]) {
+            byWeek[mon] = { tirageMl: 0, biberonMl: 0, nbTirage: 0, nbBiberon: 0 };
+          }
+          const t = Number(e.tirage) || 0;
+          const b = Number(e.biberon) || 0;
+          byWeek[mon].tirageMl += t;
+          byWeek[mon].biberonMl += b;
+          if (t > 0) byWeek[mon].nbTirage++;
+          if (b > 0) byWeek[mon].nbBiberon++;
+        });
+        return byWeek;
+      }
+
+      function formatChartLabel(iso) {
+        try {
+          const parts = iso.split("-").map(Number);
+          const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+          return dt.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+        } catch (_e) {
+          return iso;
+        }
+      }
+
+      function initVolumeShortcuts() {
+        document.querySelectorAll(".volume-shortcuts[data-volume-for]").forEach(function (wrap) {
+          if (wrap.getAttribute("data-volume-shortcuts-init") === "1") return;
+          wrap.setAttribute("data-volume-shortcuts-init", "1");
+          const fieldId = wrap.getAttribute("data-volume-for");
+          const input = document.getElementById(fieldId);
+          if (!input) return;
+          for (var n = 10; n <= 150; n += 10) {
+            (function (ml) {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "shortcut-ml";
+              btn.textContent = String(ml);
+              btn.setAttribute("aria-label", ml + " millilitres");
+              btn.addEventListener("click", function () {
+                input.value = String(ml);
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+              });
+              wrap.appendChild(btn);
+            })(n);
+          }
+        });
+      }
+
+      function renderCharts() {
+        if (typeof Chart === "undefined") return;
+        const canvasMl = document.getElementById("chart-ml");
+        const canvasPr = document.getElementById("chart-prises");
+        if (!canvasMl || !canvasPr) return;
+
+        const entries = loadEntries();
+        const labels = [];
+        const tirageMl = [];
+        const biberonMl = [];
+        const nbT = [];
+        const nbB = [];
+
+        if (chartMode === "day") {
+          const byDay = aggregateByDayForCharts(entries);
+          let dates = Object.keys(byDay).sort();
+          if (dates.length > 60) dates = dates.slice(-60);
+          dates.forEach(function (d) {
+            labels.push(formatChartLabel(d));
+            const x = byDay[d];
+            tirageMl.push(x.tirageMl);
+            biberonMl.push(x.biberonMl);
+            nbT.push(x.nbTirage);
+            nbB.push(x.nbBiberon);
+          });
+        } else {
+          const byWeek = aggregateByWeekForCharts(entries);
+          let mondays = Object.keys(byWeek).sort();
+          if (mondays.length > 26) mondays = mondays.slice(-26);
+          mondays.forEach(function (mon) {
+            labels.push("Sem. " + formatChartLabel(mon));
+            const x = byWeek[mon];
+            tirageMl.push(x.tirageMl);
+            biberonMl.push(x.biberonMl);
+            nbT.push(x.nbTirage);
+            nbB.push(x.nbBiberon);
+          });
+        }
+
+        if (chartMlInstance) {
+          chartMlInstance.destroy();
+          chartMlInstance = null;
+        }
+        if (chartPrisesInstance) {
+          chartPrisesInstance.destroy();
+          chartPrisesInstance = null;
+        }
+
+        if (labels.length === 0) {
+          labels.push("—");
+          tirageMl.push(0);
+          biberonMl.push(0);
+          nbT.push(0);
+          nbB.push(0);
+        }
+
+        const ctxMl = canvasMl.getContext("2d");
+        chartMlInstance = new Chart(ctxMl, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Tirage (ml)",
+                data: tirageMl,
+                borderColor: "#4a9180",
+                backgroundColor: "rgba(107, 168, 150, 0.18)",
+                tension: 0.25,
+                fill: false
+              },
+              {
+                label: "Biberon (ml)",
+                data: biberonMl,
+                borderColor: "#6b85a8",
+                backgroundColor: "rgba(125, 148, 179, 0.18)",
+                tension: 0.25,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: { legend: { position: "bottom" } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: "ml" }
+              }
+            }
+          }
+        });
+
+        const ctxPr = canvasPr.getContext("2d");
+        chartPrisesInstance = new Chart(ctxPr, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Nb tirages",
+                data: nbT,
+                borderColor: "#2d5c4f",
+                tension: 0.25
+              },
+              {
+                label: "Nb biberons",
+                data: nbB,
+                borderColor: "#4a5d75",
+                tension: 0.25
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: { legend: { position: "bottom" } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                title: { display: true, text: "Prises" }
+              }
+            }
+          }
+        });
+      }
+
       function renderDailyRecap() {
         const tbody = document.getElementById("tbody-recap-jour");
         const emptyEl = document.getElementById("empty-recap-jour");
@@ -1566,6 +2172,7 @@
         tbody.innerHTML = "";
         if (dates.length === 0) {
           emptyEl.hidden = false;
+          renderCharts();
           return;
         }
 
@@ -1589,6 +2196,7 @@
             " ml</td>";
           tbody.appendChild(tr);
         });
+        renderCharts();
       }
 
       function renderHistory() {
@@ -1734,7 +2342,8 @@
         const wrap = document.createElement("div");
         wrap.className = "card";
         wrap.style.marginTop = "1.35rem";
-        wrap.innerHTML = "<h2>Journal des actions</h2><p style=\"margin:0 0 0.75rem;color:var(--muted);font-size:0.9rem\">Créations, modifications et suppressions récentes.</p>";
+        wrap.innerHTML =
+          '<h2>Journal des actions</h2><p class="lead mb-075">Créations, modifications et suppressions récentes.</p>';
 
         const ul = document.createElement("ul");
         ul.style.cssText = "margin:0;padding-left:1.1rem;font-size:0.88rem;color:var(--muted);max-height:220px;overflow-y:auto;";
@@ -1975,11 +2584,25 @@
           });
           if (id === "historique") renderHistory();
           if (id === "recap-jour") renderDailyRecap();
+          if (id === "graphiques") renderCharts();
           if (id === "sync") {
             populateSyncUI();
             initFirebaseSync();
           }
         });
+      });
+
+      document.getElementById("chart-mode-day").addEventListener("click", function () {
+        chartMode = "day";
+        document.getElementById("chart-mode-day").setAttribute("aria-pressed", "true");
+        document.getElementById("chart-mode-week").setAttribute("aria-pressed", "false");
+        renderCharts();
+      });
+      document.getElementById("chart-mode-week").addEventListener("click", function () {
+        chartMode = "week";
+        document.getElementById("chart-mode-day").setAttribute("aria-pressed", "false");
+        document.getElementById("chart-mode-week").setAttribute("aria-pressed", "true");
+        renderCharts();
       });
 
       document.getElementById("btn-sync-apply").addEventListener("click", function () {
@@ -2106,6 +2729,7 @@
 
       function runAfterUnlock() {
         ensureDemoDataIfEmpty();
+        initVolumeShortcuts();
         renderTodayTable();
         renderHistory();
         renderDailyRecap();
