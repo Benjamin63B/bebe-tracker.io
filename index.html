@@ -718,6 +718,27 @@
       white-space: nowrap;
       border: 0;
     }
+
+    .sync-firebase-hint {
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+    }
+
+    .sync-firebase-hint code {
+      font-size: 0.8rem;
+    }
+
+    .sync-status-line {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+      min-height: 1.35em;
+    }
   </style>
 </head>
 <body>
@@ -820,6 +841,7 @@
       <button type="button" class="tab" role="tab" id="tab-aujourdhui" aria-selected="true" aria-controls="panel-aujourdhui">Aujourd’hui</button>
       <button type="button" class="tab" role="tab" id="tab-historique" aria-selected="false" aria-controls="panel-historique">Historique</button>
       <button type="button" class="tab" role="tab" id="tab-recap-jour" aria-selected="false" aria-controls="panel-recap-jour">Totaux par jour</button>
+      <button type="button" class="tab" role="tab" id="tab-sync" aria-selected="false" aria-controls="panel-sync">Partage</button>
     </div>
 
     <section id="panel-aujourdhui" class="panel active" role="tabpanel" aria-labelledby="tab-aujourdhui">
@@ -936,6 +958,43 @@
       </div>
     </section>
 
+    <section id="panel-sync" class="panel" role="tabpanel" aria-labelledby="tab-sync" hidden>
+      <div class="card">
+        <h2>Synchronisation en direct</h2>
+        <p style="margin: 0 0 0.75rem; color: var(--muted); font-size: 0.92rem;">
+          Chaque appareil garde une copie locale : pour que <strong>tout le monde voie les ajouts en temps réel</strong>, activez un salon partagé (même code sur tous les téléphones). Sinon vous pouvez échanger un <strong>fichier JSON</strong>.
+        </p>
+        <div class="sync-firebase-hint" id="sync-firebase-missing" hidden>
+          <strong>Configuration requise :</strong> créez un projet Firebase (gratuit), activez la Realtime Database, puis renseignez <code>FIREBASE_CONFIG</code> en haut du script dans ce fichier HTML (voir commentaires dans le code).
+        </div>
+        <div class="form-grid" style="margin-bottom: 0.75rem">
+          <div style="grid-column: 1 / -1;">
+            <label for="sync-room-code">Code salon (identique pour toute la famille)</label>
+            <input type="text" id="sync-room-code" placeholder="ex: famille-poupette-2026" maxlength="64" autocomplete="off" />
+          </div>
+        </div>
+        <label class="lock-remember" style="margin-bottom: 0.75rem">
+          <input type="checkbox" id="sync-enabled" />
+          <span>Activer la synchro en ligne (temps réel via le cloud)</span>
+        </label>
+        <div class="btn-row" style="margin-bottom: 0.75rem">
+          <button type="button" class="primary" id="btn-sync-apply">Enregistrer et connecter</button>
+        </div>
+        <p id="sync-status" class="sync-status-line" aria-live="polite"></p>
+      </div>
+      <div class="card">
+        <h2>Fichier JSON (sans cloud)</h2>
+        <p style="margin: 0 0 0.75rem; color: var(--muted); font-size: 0.92rem;">
+          <strong>Exporter</strong> : sauvegarde toutes les données dans un fichier. <strong>Importer</strong> : fusionne ou remplace selon le fichier (à envoyer par mail, Drive, etc.).
+        </p>
+        <div class="btn-row">
+          <button type="button" class="primary" id="btn-export-json">Exporter JSON</button>
+          <button type="button" class="ghost" id="btn-import-json">Importer un fichier…</button>
+        </div>
+        <input type="file" id="import-json-file" accept=".json,application/json" hidden />
+      </div>
+    </section>
+
     <footer>
       Données enregistrées dans ce navigateur (stockage local). Pensez à une sauvegarde si vous changez d’appareil.
       <div class="footer-actions">
@@ -1026,8 +1085,26 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
   <script>
     (function () {
+      /**
+       * Synchro temps réel : créez un projet sur https://console.firebase.google.com
+       * → Realtime Database → créer la base → Règles (test) : .read/.write true sur "rooms"
+       * → Paramètres du projet → Votre appli → config Web → copiez apiKey, authDomain, databaseURL, projectId
+       */
+      /** Si la synchro échoue : Firebase → Realtime Database → copier l’URL exacte dans databaseURL ci-dessous. */
+      const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyDP1_68KcSqNAfKx8ObwkYbw_KmVLwaVAU",
+        authDomain: "eleonore-617ce.firebaseapp.com",
+        databaseURL: "https://eleonore-617ce-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "eleonore-617ce",
+        storageBucket: "eleonore-617ce.firebasestorage.app",
+        messagingSenderId: "130077142531",
+        appId: "1:130077142531:web:4a1d72194eca4d0eaea836"
+      };
+
       const STORAGE_KEY = "poupette_recap_lait_v1";
       const HISTORY_KEY = "poupette_recap_historique_v1";
       const NAMES_KEY = "poupette_recap_names_v1";
@@ -1035,6 +1112,14 @@
       const SESSION_KEY = "poupette_session_unlock_v1";
       /** Session longue durée (mobile / « rester connecté ») */
       const PERSISTENT_UNLOCK_KEY = "poupette_rester_connecte_v1";
+      const SYNC_ROOM_KEY = "poupette_sync_room_v1";
+      const SYNC_ENABLED_KEY = "poupette_sync_enabled_v1";
+
+      let firebaseDb = null;
+      let firebaseSyncRef = null;
+      let applyingRemote = false;
+      let cloudPushTimer = null;
+      let firebaseSyncFirstSnapshot = true;
       /** Mot de passe d’accès : EleonorePB (empreinte SHA-256, ne pas modifier sauf si vous changez le mot de passe) */
       const PRESET_PASSWORD_HASH =
         "19f5a6f5297200f374a656c90d65b34dd2d8b9c4955784e8d31eb1273d753fa0";
@@ -1079,6 +1164,147 @@
         return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
       }
 
+      function firebaseConfigured() {
+        if (typeof firebase === "undefined") return false;
+        return !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey.indexOf("YOUR_") !== 0);
+      }
+
+      function sanitizeRoomCode(raw) {
+        return String(raw || "")
+          .replace(/[^a-zA-Z0-9_-]/g, "")
+          .slice(0, 64);
+      }
+
+      function setSyncStatusText(msg) {
+        const el = document.getElementById("sync-status");
+        if (el) el.textContent = msg || "";
+      }
+
+      function updateFirebaseHintUI() {
+        const miss = document.getElementById("sync-firebase-missing");
+        if (!miss) return;
+        miss.hidden = firebaseConfigured();
+      }
+
+      function tearDownFirebaseSync() {
+        if (firebaseSyncRef) {
+          firebaseSyncRef.off();
+          firebaseSyncRef = null;
+        }
+      }
+
+      function ensureFirebaseDb() {
+        if (firebaseDb) return firebaseDb;
+        if (!firebaseConfigured()) return null;
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(FIREBASE_CONFIG);
+          }
+          firebaseDb = firebase.database();
+          return firebaseDb;
+        } catch (e) {
+          setSyncStatusText("Erreur Firebase : " + e.message);
+          return null;
+        }
+      }
+
+      function scheduleCloudPush() {
+        if (applyingRemote) return;
+        if (!firebaseConfigured()) return;
+        ensureFirebaseDb();
+        if (!firebaseDb) return;
+        if (localStorage.getItem(SYNC_ENABLED_KEY) !== "1") return;
+        const room = sanitizeRoomCode(localStorage.getItem(SYNC_ROOM_KEY) || "");
+        if (room.length < 4) return;
+        clearTimeout(cloudPushTimer);
+        cloudPushTimer = setTimeout(pushBundleToCloud, 450);
+      }
+
+      function pushBundleToCloud() {
+        if (applyingRemote) return;
+        const db = ensureFirebaseDb();
+        if (!db) return;
+        if (localStorage.getItem(SYNC_ENABLED_KEY) !== "1") return;
+        const room = sanitizeRoomCode(localStorage.getItem(SYNC_ROOM_KEY) || "");
+        if (room.length < 4) return;
+        const ref = db.ref("rooms/" + room + "/bundle");
+        ref.set(
+          {
+            entries: loadEntries(),
+            names: loadNames(),
+            historyLog: loadHistoryLog(),
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+          },
+          function (err) {
+            if (err) {
+              setSyncStatusText("Erreur d’envoi : " + (err.message || String(err)));
+            } else {
+              setSyncStatusText("Synchronisé · " + new Date().toLocaleTimeString("fr-FR"));
+            }
+          }
+        );
+      }
+
+      function populateSyncUI() {
+        const roomEl = document.getElementById("sync-room-code");
+        const enEl = document.getElementById("sync-enabled");
+        if (roomEl) roomEl.value = localStorage.getItem(SYNC_ROOM_KEY) || "";
+        if (enEl) enEl.checked = localStorage.getItem(SYNC_ENABLED_KEY) === "1";
+        updateFirebaseHintUI();
+      }
+
+      function initFirebaseSync() {
+        tearDownFirebaseSync();
+        firebaseSyncFirstSnapshot = true;
+        updateFirebaseHintUI();
+        if (!firebaseConfigured()) {
+          setSyncStatusText("Configurez Firebase (objet FIREBASE_CONFIG) pour la synchro en ligne.");
+          return;
+        }
+        const db = ensureFirebaseDb();
+        if (!db) return;
+        if (localStorage.getItem(SYNC_ENABLED_KEY) !== "1") {
+          setSyncStatusText("Synchro désactivée.");
+          return;
+        }
+        const room = sanitizeRoomCode(localStorage.getItem(SYNC_ROOM_KEY) || "");
+        if (room.length < 4) {
+          setSyncStatusText("Code salon : au moins 4 caractères (lettres, chiffres, - _).");
+          return;
+        }
+        firebaseSyncRef = db.ref("rooms/" + room + "/bundle");
+        firebaseSyncRef.on("value", function (snap) {
+          const v = snap.val();
+          if (firebaseSyncFirstSnapshot) {
+            firebaseSyncFirstSnapshot = false;
+            if (!v || !Array.isArray(v.entries)) {
+              pushBundleToCloud();
+              setSyncStatusText("Connexion — envoi de vos données locales.");
+              return;
+            }
+          }
+          if (!v || !Array.isArray(v.entries)) return;
+          applyingRemote = true;
+          try {
+            saveEntries(v.entries);
+            if (v.names && typeof v.names === "object") {
+              saveNames(v.names);
+            }
+            applyNamesToInputs();
+            if (v.historyLog && Array.isArray(v.historyLog)) {
+              saveHistoryLog(v.historyLog);
+            }
+            renderTodayTable();
+            renderHistory();
+            renderDailyRecap();
+            setSyncStatusText("Données à jour · " + new Date().toLocaleTimeString("fr-FR"));
+          } finally {
+            applyingRemote = false;
+          }
+        });
+        setSyncStatusText("Écoute du salon « " + room + " »…");
+      }
+
       function loadEntries() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
@@ -1092,6 +1318,7 @@
 
       function saveEntries(entries) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+        scheduleCloudPush();
       }
 
       /** Données d’exemple identiques à la maquette (biberons Éléonore / tirages Andéole), 23–25 mars. */
@@ -1164,6 +1391,7 @@
 
       function saveHistoryLog(log) {
         localStorage.setItem(HISTORY_KEY, JSON.stringify(log.slice(0, 500)));
+        scheduleCloudPush();
       }
 
       function pushHistory(action, entrySnapshot) {
@@ -1213,6 +1441,7 @@
 
       function saveNames(names) {
         localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+        scheduleCloudPush();
       }
 
       function applyNamesToInputs() {
@@ -1746,7 +1975,63 @@
           });
           if (id === "historique") renderHistory();
           if (id === "recap-jour") renderDailyRecap();
+          if (id === "sync") {
+            populateSyncUI();
+            initFirebaseSync();
+          }
         });
+      });
+
+      document.getElementById("btn-sync-apply").addEventListener("click", function () {
+        const raw = document.getElementById("sync-room-code").value;
+        const room = sanitizeRoomCode(raw);
+        if (document.getElementById("sync-room-code")) {
+          document.getElementById("sync-room-code").value = room;
+        }
+        const enabled = document.getElementById("sync-enabled").checked;
+        if (enabled && room.length < 4) {
+          alert("Code salon : au moins 4 caractères (lettres, chiffres, tirets bas ou tirets).");
+          return;
+        }
+        localStorage.setItem(SYNC_ROOM_KEY, room);
+        localStorage.setItem(SYNC_ENABLED_KEY, enabled ? "1" : "0");
+        initFirebaseSync();
+      });
+
+      document.getElementById("btn-export-json").addEventListener("click", function () {
+        const bundle = {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          entries: loadEntries(),
+          names: loadNames(),
+          historyLog: loadHistoryLog()
+        };
+        const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "poupette-export-" + todayISODate() + ".json";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      document.getElementById("btn-import-json").addEventListener("click", function () {
+        document.getElementById("import-json-file").click();
+      });
+
+      document.getElementById("import-json-file").addEventListener("change", function (ev) {
+        const f = ev.target.files && ev.target.files[0];
+        ev.target.value = "";
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+          try {
+            const bundle = JSON.parse(reader.result);
+            applyImportedBundle(bundle);
+          } catch (e) {
+            alert("Fichier JSON illisible : " + e.message);
+          }
+        };
+        reader.readAsText(f);
       });
 
       const lockScreen = document.getElementById("lock-screen");
@@ -1824,6 +2109,33 @@
         renderTodayTable();
         renderHistory();
         renderDailyRecap();
+        populateSyncUI();
+        initFirebaseSync();
+      }
+
+      function applyImportedBundle(bundle) {
+        if (!bundle || !Array.isArray(bundle.entries)) {
+          alert("Fichier invalide : un tableau « entries » est attendu.");
+          return;
+        }
+        applyingRemote = true;
+        try {
+          saveEntries(bundle.entries);
+          if (bundle.names && typeof bundle.names === "object") {
+            saveNames(bundle.names);
+          }
+          applyNamesToInputs();
+          if (bundle.historyLog && Array.isArray(bundle.historyLog)) {
+            saveHistoryLog(bundle.historyLog);
+          }
+          renderTodayTable();
+          renderHistory();
+          renderDailyRecap();
+          initFirebaseSync();
+        } finally {
+          applyingRemote = false;
+        }
+        alert("Import terminé.");
       }
 
       formLockSetup.addEventListener("submit", async function (ev) {
