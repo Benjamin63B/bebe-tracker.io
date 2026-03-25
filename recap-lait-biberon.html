@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Récapitulatif — Tirage & biberon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f6f3ef;
+      --surface: #fffefb;
+      --border: #e8e2d9;
+      --text: #2c2825;
+      --muted: #6b6560;
+      --accent: #c4a574;
+      --accent-soft: #ebe4d8;
+      --tirage: #7eb8a8;
+      --biberon: #8fa8c4;
+      --danger: #c45c5c;
+      --danger-soft: #fdeaea;
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(44, 40, 37, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tab {
+      padding: 0.65rem 1.25rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+
+    .tab:hover {
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .tab[aria-selected="true"] {
+      background: var(--text);
+      color: var(--surface);
+      border-color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block !important;
+      animation: fade 0.25s ease;
+    }
+
+    section.panel[hidden] {
+      display: none !important;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.35rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.25rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.85rem;
+      align-items: end;
+    }
+
+    .form-when {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.85rem;
+      align-items: end;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .form-when-title {
+      grid-column: 1 / -1;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 0 0 0.25rem;
+    }
+
+    .form-volumes-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .form-volumes-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field-block {
+      border-radius: 12px;
+      padding: 1rem 1rem 0.9rem;
+      border: 1px solid var(--border);
+    }
+
+    .field-block--tirage {
+      background: rgba(126, 184, 168, 0.12);
+      border-color: rgba(126, 184, 168, 0.45);
+      border-left: 4px solid var(--tirage);
+    }
+
+    .field-block--biberon {
+      background: rgba(143, 168, 196, 0.14);
+      border-color: rgba(143, 168, 196, 0.45);
+      border-left: 4px solid var(--biberon);
+    }
+
+    .field-block-head {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    .field-block--tirage .field-block-head {
+      color: #3d6b5e;
+    }
+
+    .field-block--biberon .field-block-head {
+      color: #4a5f78;
+    }
+
+    .field-block-hint {
+      margin: 0 0 0.65rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .field-block label {
+      color: var(--text);
+    }
+
+    .field-block--tirage input[type="number"]:focus {
+      outline: 2px solid var(--tirage);
+      outline-offset: 1px;
+      border-color: var(--tirage);
+    }
+
+    .field-block--biberon input[type="number"]:focus {
+      outline: 2px solid var(--biberon);
+      outline-offset: 1px;
+      border-color: var(--biberon);
+    }
+
+    .form-note-wrap {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    input[type="date"],
+    input[type="time"],
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font: inherit;
+      background: #fff;
+    }
+
+    input:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    button.primary {
+      background: var(--text);
+      color: var(--surface);
+      border: none;
+      padding: 0.65rem 1.2rem;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.primary:hover {
+      opacity: 0.92;
+    }
+
+    button.ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.9rem;
+      border-radius: 10px;
+      font: inherit;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    button.ghost:hover {
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    button.danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border: 1px solid #f0c8c8;
+    }
+
+    button.small {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.85rem;
+    }
+
+    .totaux {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .total-box {
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .total-box.tirage { border-left: 4px solid var(--tirage); }
+    .total-box.biberon { border-left: 4px solid var(--biberon); }
+
+    .total-box span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .total-box strong {
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.65rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .cell-actions {
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+    }
+
+    .history-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    @media (max-width: 780px) {
+      .history-two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .history-column {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.15rem 1.25rem;
+      box-shadow: var(--shadow);
+      min-height: 120px;
+      max-height: min(70vh, 720px);
+      overflow-y: auto;
+    }
+
+    .history-column h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 0 0 0.35rem;
+      color: var(--text);
+    }
+
+    .history-column .history-sub {
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin: 0 0 0.85rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .history-column.biberon-col .history-sub {
+      color: #5a6d86;
+    }
+
+    .history-column.tirage-col .history-sub {
+      color: #4d7a6e;
+    }
+
+    ul.history-list {
+      margin: 0;
+      padding-left: 1.15rem;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    ul.history-list li {
+      margin-bottom: 0.35rem;
+    }
+
+    .history-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.35rem 0.5rem;
+    }
+
+    .history-line span {
+      flex: 1;
+      min-width: 10rem;
+    }
+
+    .history-line .history-actions {
+      flex-shrink: 0;
+    }
+
+    .names-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      align-items: center;
+    }
+
+    .names-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin: 0;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 500;
+    }
+
+    .names-row input {
+      width: 9rem;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.88rem;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(44, 40, 37, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.35rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--border);
+    }
+
+    .modal h3 {
+      margin: 0 0 1rem;
+      font-size: 1.1rem;
+    }
+
+    .modal .form-grid {
+      margin-bottom: 0.5rem;
+    }
+
+    .modal .form-volumes-split {
+      margin-bottom: 0.75rem;
+      grid-template-columns: 1fr;
+    }
+
+    .modal .form-when {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+    }
+
+    .confirm-text {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    th.col-tirage {
+      color: #3d6b5e;
+      border-bottom-color: rgba(126, 184, 168, 0.5);
+    }
+
+    th.col-biberon {
+      color: #4a5f78;
+      border-bottom-color: rgba(143, 168, 196, 0.55);
+    }
+
+    td.col-tirage {
+      border-left: 2px solid rgba(126, 184, 168, 0.35);
+    }
+
+    td.col-biberon {
+      border-left: 2px solid rgba(143, 168, 196, 0.35);
+    }
+
+    @media (max-width: 520px) {
+      th:nth-child(5), td:nth-child(5) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Récapitulatif tirage & biberon</h1>
+      <p>Suivi quotidien — modifier, supprimer, tout est conservé dans l’historique.</p>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" role="tab" id="tab-aujourdhui" aria-selected="true" aria-controls="panel-aujourdhui">Aujourd’hui</button>
+      <button type="button" class="tab" role="tab" id="tab-historique" aria-selected="false" aria-controls="panel-historique">Historique</button>
+      <button type="button" class="tab" role="tab" id="tab-recap-jour" aria-selected="false" aria-controls="panel-recap-jour">Totaux par jour</button>
+    </div>
+
+    <section id="panel-aujourdhui" class="panel active" role="tabpanel" aria-labelledby="tab-aujourdhui">
+      <div class="card">
+        <h2>Nouvelle entrée <span class="badge">ml</span></h2>
+        <form id="form-add">
+          <div class="form-when">
+            <p class="form-when-title">Quand ?</p>
+            <div>
+              <label for="add-date">Date</label>
+              <input type="date" id="add-date" required />
+            </div>
+            <div>
+              <label for="add-time">Heure</label>
+              <input type="time" id="add-time" />
+            </div>
+          </div>
+          <div class="form-volumes-split">
+            <div class="field-block field-block--tirage">
+              <div class="field-block-head">🤱 Tirage (tire-lait)</div>
+              <p class="field-block-hint" id="hint-add-tirage">Volume de <strong>lait exprimé</strong> avec le tire-lait — pas le biberon.</p>
+              <label for="add-tirage">Millilitres tirés</label>
+              <input type="number" id="add-tirage" name="tirage" min="0" step="1" placeholder="0" value="" inputmode="numeric" aria-describedby="hint-add-tirage" />
+            </div>
+            <div class="field-block field-block--biberon">
+              <div class="field-block-head">🍼 Biberon</div>
+              <p class="field-block-hint" id="hint-add-biberon">Volume de <strong>lait bu</strong> au biberon par le bébé.</p>
+              <label for="add-biberon">Millilitres au biberon</label>
+              <input type="number" id="add-biberon" name="biberon" min="0" step="1" placeholder="0" value="" inputmode="numeric" aria-describedby="hint-add-biberon" />
+            </div>
+          </div>
+          <div class="form-note-wrap">
+            <label for="add-note">Note (facultatif)</label>
+            <input type="text" id="add-note" placeholder="Ex. côté gauche, après la sieste…" maxlength="120" />
+          </div>
+        </form>
+        <div class="btn-row">
+          <button type="submit" form="form-add" class="primary">Ajouter au tableau</button>
+          <button type="button" class="ghost" id="btn-reset-form">Réinitialiser le formulaire</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Totaux du jour <span class="badge" id="badge-date"></span></h2>
+        <div class="totaux">
+          <div class="total-box tirage">
+            <span>Tirage cumulé</span>
+            <strong id="total-tirage">0 ml</strong>
+          </div>
+          <div class="total-box biberon">
+            <span>Biberon cumulé</span>
+            <strong id="total-biberon">0 ml</strong>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Heure</th>
+                <th class="col-tirage">🤱 Tirage</th>
+                <th class="col-biberon">🍼 Biberon</th>
+                <th>Note</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-aujourdhui"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="empty-aujourdhui" hidden>Aucune entrée pour cette date. Ajoutez une ligne ci-dessus.</p>
+      </div>
+    </section>
+
+    <section id="panel-historique" class="panel" role="tabpanel" aria-labelledby="tab-historique" hidden>
+      <div class="card">
+        <h2>Historique</h2>
+        <p style="margin: 0 0 0.75rem; color: var(--muted); font-size: 0.92rem;">
+          Deux listes comme votre suivi : biberons et tirages, du plus ancien au plus récent. Modifier ou supprimer agit sur la ligne complète (même horaire).
+        </p>
+        <div class="names-row" aria-label="Prénoms affichés dans les titres">
+          <label>🍼 Prénom biberons <input type="text" id="name-biberon" maxlength="40" autocomplete="given-name" /></label>
+          <label>🤱 Prénom tirages <input type="text" id="name-tirage" maxlength="40" autocomplete="given-name" /></label>
+        </div>
+        <div class="btn-row" style="margin-bottom: 1rem;">
+          <button type="button" class="primary" id="btn-load-demo">Charger la démo (maquette 23–25 mars)</button>
+          <button type="button" class="ghost danger" id="btn-clear-all">Tout effacer (données locales)</button>
+        </div>
+        <div id="history-container"></div>
+        <p class="empty" id="empty-historique" hidden>Aucun historique pour le moment.</p>
+      </div>
+    </section>
+
+    <section id="panel-recap-jour" class="panel" role="tabpanel" aria-labelledby="tab-recap-jour" hidden>
+      <div class="card">
+        <h2>Totaux par jour</h2>
+        <p style="margin: 0 0 1rem; color: var(--muted); font-size: 0.92rem;">
+          Un seul résumé par date : total tirage et total biberon (sans détail des heures).
+        </p>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th class="col-tirage">🤱 Total tirage</th>
+                <th class="col-biberon">🍼 Total biberon</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-recap-jour"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="empty-recap-jour" hidden>Aucune donnée à agréger.</p>
+      </div>
+    </section>
+
+    <footer>Données enregistrées dans ce navigateur (stockage local). Pensez à une sauvegarde si vous changez d’appareil.</footer>
+  </div>
+
+  <div class="modal-overlay" id="modal-edit" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-edit-title">
+      <h3 id="modal-edit-title">Modifier l’entrée</h3>
+      <form id="form-edit">
+        <input type="hidden" id="edit-id" />
+        <div class="form-when">
+          <p class="form-when-title">Quand ?</p>
+          <div>
+            <label for="edit-date">Date</label>
+            <input type="date" id="edit-date" required />
+          </div>
+          <div>
+            <label for="edit-time">Heure</label>
+            <input type="time" id="edit-time" />
+          </div>
+        </div>
+        <div class="form-volumes-split">
+          <div class="field-block field-block--tirage">
+            <div class="field-block-head">🤱 Tirage (tire-lait)</div>
+            <p class="field-block-hint" id="hint-edit-tirage">Lait exprimé au tire-lait (ml).</p>
+            <label for="edit-tirage">Millilitres tirés</label>
+            <input type="number" id="edit-tirage" min="0" step="1" inputmode="numeric" aria-describedby="hint-edit-tirage" />
+          </div>
+          <div class="field-block field-block--biberon">
+            <div class="field-block-head">🍼 Biberon</div>
+            <p class="field-block-hint" id="hint-edit-biberon">Lait bu au biberon (ml).</p>
+            <label for="edit-biberon">Millilitres au biberon</label>
+            <input type="number" id="edit-biberon" min="0" step="1" inputmode="numeric" aria-describedby="hint-edit-biberon" />
+          </div>
+        </div>
+        <div class="form-note-wrap">
+          <label for="edit-note">Note</label>
+          <input type="text" id="edit-note" maxlength="120" />
+        </div>
+        <div class="btn-row">
+          <button type="submit" class="primary">Enregistrer</button>
+          <button type="button" class="ghost" id="modal-edit-cancel">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-confirm" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="confirm-title">Confirmer</h3>
+      <p class="confirm-text" id="confirm-text"></p>
+      <div class="btn-row">
+        <button type="button" class="primary" id="confirm-yes">Oui</button>
+        <button type="button" class="ghost" id="confirm-no">Non</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = "poupette_recap_lait_v1";
+      const HISTORY_KEY = "poupette_recap_historique_v1";
+      const NAMES_KEY = "poupette_recap_names_v1";
+
+      /** @typedef {{ id: string, date: string, time: string, tirage: number, biberon: number, note: string, createdAt: string }} Entry */
+
+      function uid() {
+        return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
+      }
+
+      function todayISODate() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+      }
+
+      function nowTime() {
+        const d = new Date();
+        return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+      }
+
+      function loadEntries() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return [];
+          const arr = JSON.parse(raw);
+          return Array.isArray(arr) ? arr : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveEntries(entries) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      }
+
+      /** Données d’exemple identiques à la maquette (biberons Éléonore / tirages Andéole), 23–25 mars. */
+      function buildDemoEntries() {
+        const year = new Date().getFullYear();
+        function iso(day) {
+          return year + "-03-" + String(day).padStart(2, "0");
+        }
+        function row(dateStr, timeStr, tirage, biberon) {
+          return {
+            id: uid(),
+            date: dateStr,
+            time: timeStr,
+            tirage: tirage,
+            biberon: biberon,
+            note: "",
+            createdAt: new Date().toISOString()
+          };
+        }
+        const out = [];
+        const biberonSpec = [
+          [23, "03:00", 80], [23, "07:00", 80], [23, "10:30", 90], [23, "13:30", 80], [23, "15:35", 90], [23, "18:00", 90], [23, "21:20", 80],
+          [24, "02:10", 80], [24, "05:35", 80], [24, "09:10", 80], [24, "12:00", 90], [24, "15:00", 90], [24, "17:30", 80], [24, "20:00", 80], [24, "23:15", 90],
+          [25, "04:15", 60], [25, "05:10", 30], [25, "08:30", 90], [25, "11:10", 90], [25, "13:30", 80], [25, "16:25", 80]
+        ];
+        const tirageSpec = [
+          [23, "01:30", 80], [23, "05:00", 80], [23, "08:10", 90], [23, "10:00", 50], [23, "13:00", 60], [23, "16:10", 60], [23, "19:40", 80], [23, "22:10", 20],
+          [24, "02:30", 80], [24, "05:40", 80], [24, "10:17", 140], [24, "12:40", 70], [24, "14:30", 45], [24, "18:00", 80], [24, "21:30", 90], [24, "23:30", 60],
+          [25, "04:30", 120], [25, "09:25", 120], [25, "13:00", 120], [25, "15:30", 60]
+        ];
+        biberonSpec.forEach(function (spec) {
+          out.push(row(iso(spec[0]), spec[1], 0, spec[2]));
+        });
+        tirageSpec.forEach(function (spec) {
+          out.push(row(iso(spec[0]), spec[1], spec[2], 0));
+        });
+        return sortEntriesChrono(out);
+      }
+
+      /** Si aucune donnée : insère la démo pour que l’historique ne soit jamais vide au premier usage. */
+      function ensureDemoDataIfEmpty() {
+        if (loadEntries().length > 0) return;
+        saveEntries(buildDemoEntries());
+        saveNames({ biberon: "Éléonore", tirage: "Andéole" });
+        applyNamesToInputs();
+      }
+
+      function loadDemoReplace() {
+        saveEntries(buildDemoEntries());
+        saveNames({ biberon: "Éléonore", tirage: "Andéole" });
+        applyNamesToInputs();
+        try {
+          localStorage.removeItem(HISTORY_KEY);
+        } catch (e) {}
+        renderTodayTable();
+        renderHistory();
+        renderDailyRecap();
+      }
+
+      function loadHistoryLog() {
+        try {
+          const raw = localStorage.getItem(HISTORY_KEY);
+          if (!raw) return [];
+          const arr = JSON.parse(raw);
+          return Array.isArray(arr) ? arr : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveHistoryLog(log) {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(log.slice(0, 500)));
+      }
+
+      function pushHistory(action, entrySnapshot) {
+        const log = loadHistoryLog();
+        log.unshift({
+          at: new Date().toISOString(),
+          action,
+          entry: entrySnapshot
+        });
+        saveHistoryLog(log);
+      }
+
+      /** @param {Entry[]} entries */
+      function sortEntries(entries) {
+        return [...entries].sort((a, b) => {
+          const da = a.date + "T" + (a.time || "00:00");
+          const db = b.date + "T" + (b.time || "00:00");
+          return db.localeCompare(da);
+        });
+      }
+
+      const addDate = document.getElementById("add-date");
+      const addTime = document.getElementById("add-time");
+      const tbodyAujourdhui = document.getElementById("tbody-aujourdhui");
+      const emptyAujourdhui = document.getElementById("empty-aujourdhui");
+      const badgeDate = document.getElementById("badge-date");
+      const totalTirage = document.getElementById("total-tirage");
+      const totalBiberon = document.getElementById("total-biberon");
+      const historyContainer = document.getElementById("history-container");
+      const emptyHistorique = document.getElementById("empty-historique");
+      const inputNameBiberon = document.getElementById("name-biberon");
+      const inputNameTirage = document.getElementById("name-tirage");
+
+      function loadNames() {
+        try {
+          const raw = localStorage.getItem(NAMES_KEY);
+          if (!raw) return { biberon: "Éléonore", tirage: "Andéole" };
+          const o = JSON.parse(raw);
+          return {
+            biberon: typeof o.biberon === "string" && o.biberon.trim() ? o.biberon.trim() : "Éléonore",
+            tirage: typeof o.tirage === "string" && o.tirage.trim() ? o.tirage.trim() : "Andéole"
+          };
+        } catch {
+          return { biberon: "Éléonore", tirage: "Andéole" };
+        }
+      }
+
+      function saveNames(names) {
+        localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+      }
+
+      function applyNamesToInputs() {
+        const n = loadNames();
+        inputNameBiberon.value = n.biberon;
+        inputNameTirage.value = n.tirage;
+      }
+
+      applyNamesToInputs();
+      function persistNamesAndRefresh() {
+        saveNames({ biberon: inputNameBiberon.value, tirage: inputNameTirage.value });
+        renderHistory();
+      }
+      inputNameBiberon.addEventListener("input", persistNamesAndRefresh);
+      inputNameTirage.addEventListener("input", persistNamesAndRefresh);
+
+      addDate.value = todayISODate();
+      addTime.value = nowTime();
+
+      function getSelectedDayEntries() {
+        const day = addDate.value || todayISODate();
+        const entries = loadEntries();
+        return entries.filter((e) => e.date === day);
+      }
+
+      function renderTodayTable() {
+        const day = addDate.value || todayISODate();
+        badgeDate.textContent = formatDateLabel(day);
+
+        const list = sortEntries(getSelectedDayEntries());
+        tbodyAujourdhui.innerHTML = "";
+
+        let sumT = 0;
+        let sumB = 0;
+
+        list.forEach((e) => {
+          sumT += Number(e.tirage) || 0;
+          sumB += Number(e.biberon) || 0;
+
+          const tr = document.createElement("tr");
+          tr.innerHTML =
+            "<td>" + escapeHtml(e.time || "—") + "</td>" +
+            '<td class="col-tirage">' + (e.tirage || 0) + " ml</td>" +
+            '<td class="col-biberon">' + (e.biberon || 0) + " ml</td>" +
+            "<td>" + escapeHtml(e.note || "") + "</td>" +
+            '<td class="cell-actions">' +
+            '<button type="button" class="ghost small" data-edit="' + e.id + '">Modifier</button> ' +
+            '<button type="button" class="ghost small danger" data-del="' + e.id + '">Supprimer</button>' +
+            "</td>";
+          tbodyAujourdhui.appendChild(tr);
+        });
+
+        totalTirage.textContent = sumT + " ml";
+        totalBiberon.textContent = sumB + " ml";
+        emptyAujourdhui.hidden = list.length > 0;
+
+        tbodyAujourdhui.querySelectorAll("[data-edit]").forEach((btn) => {
+          btn.addEventListener("click", () => openEdit(btn.getAttribute("data-edit")));
+        });
+        tbodyAujourdhui.querySelectorAll("[data-del]").forEach((btn) => {
+          btn.addEventListener("click", () => confirmDelete(btn.getAttribute("data-del")));
+        });
+      }
+
+      function formatDateLabel(iso) {
+        try {
+          const [y, m, d] = iso.split("-").map(Number);
+          const dt = new Date(y, m - 1, d);
+          return dt.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+        } catch {
+          return iso;
+        }
+      }
+
+      function escapeHtml(s) {
+        const div = document.createElement("div");
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      /** Tri chronologique ancien → récent */
+      function sortEntriesChrono(entries) {
+        return [...entries].sort((a, b) => {
+          const da = a.date + "T" + (a.time || "00:00");
+          const db = b.date + "T" + (b.time || "00:00");
+          return da.localeCompare(db);
+        });
+      }
+
+      /** JJ/MM HH:MM — X ml */
+      function formatHistoryBullet(isoDate, time, ml) {
+        const parts = isoDate.split("-");
+        const ddmm = parts.length === 3 ? parts[2] + "/" + parts[1] : isoDate;
+        const hm = time && time.length ? time : "00:00";
+        return ddmm + " " + hm + " — " + ml + " ml";
+      }
+
+      function renderDailyRecap() {
+        const tbody = document.getElementById("tbody-recap-jour");
+        const emptyEl = document.getElementById("empty-recap-jour");
+        if (!tbody || !emptyEl) return;
+
+        const entries = loadEntries();
+        const byDay = {};
+        entries.forEach(function (e) {
+          if (!e.date) return;
+          if (!byDay[e.date]) byDay[e.date] = { tirage: 0, biberon: 0 };
+          byDay[e.date].tirage += Number(e.tirage) || 0;
+          byDay[e.date].biberon += Number(e.biberon) || 0;
+        });
+
+        const dates = Object.keys(byDay).sort(function (a, b) {
+          return b.localeCompare(a);
+        });
+
+        tbody.innerHTML = "";
+        if (dates.length === 0) {
+          emptyEl.hidden = false;
+          return;
+        }
+
+        emptyEl.hidden = true;
+        dates.forEach(function (d) {
+          const tot = byDay[d];
+          const tr = document.createElement("tr");
+          tr.innerHTML =
+            "<td>" + escapeHtml(formatDateLabel(d)) + "</td>" +
+            '<td class="col-tirage">' + tot.tirage + " ml</td>" +
+            '<td class="col-biberon">' + tot.biberon + " ml</td>";
+          tbody.appendChild(tr);
+        });
+      }
+
+      function renderHistory() {
+        const entries = sortEntriesChrono(loadEntries());
+        historyContainer.innerHTML = "";
+
+        if (entries.length === 0) {
+          emptyHistorique.hidden = false;
+          renderHistoryAudit();
+          renderDailyRecap();
+          return;
+        }
+
+        const hasAny = entries.some(function (e) {
+          return (Number(e.tirage) || 0) > 0 || (Number(e.biberon) || 0) > 0;
+        });
+        emptyHistorique.hidden = hasAny;
+
+        const names = loadNames();
+
+        const twoCol = document.createElement("div");
+        twoCol.className = "history-two-col";
+
+        const colBiberon = document.createElement("div");
+        colBiberon.className = "history-column biberon-col";
+        colBiberon.innerHTML =
+          "<h3>Historique biberons</h3>" +
+          "<p class=\"history-sub\">🍼 Historique biberons — " +
+          escapeHtml(names.biberon) +
+          "</p>";
+        const ulB = document.createElement("ul");
+        ulB.className = "history-list";
+
+        const colTirage = document.createElement("div");
+        colTirage.className = "history-column tirage-col";
+        colTirage.innerHTML =
+          "<h3>Historique tirages</h3>" +
+          "<p class=\"history-sub\">🤱 Historique tirages — " +
+          escapeHtml(names.tirage) +
+          "</p>";
+        const ulT = document.createElement("ul");
+        ulT.className = "history-list";
+
+        entries.forEach(function (e) {
+          const bid = (Number(e.biberon) || 0) > 0;
+          const tid = (Number(e.tirage) || 0) > 0;
+
+          if (bid) {
+            const li = document.createElement("li");
+            const line = document.createElement("div");
+            line.className = "history-line";
+            const span = document.createElement("span");
+            span.textContent = formatHistoryBullet(e.date, e.time, e.biberon);
+            const act = document.createElement("div");
+            act.className = "history-actions";
+            act.innerHTML =
+              '<button type="button" class="ghost small" data-edit="' +
+              e.id +
+              '">Modifier</button> ' +
+              '<button type="button" class="ghost small danger" data-del="' +
+              e.id +
+              '">Supprimer</button>';
+            line.appendChild(span);
+            line.appendChild(act);
+            li.appendChild(line);
+            ulB.appendChild(li);
+          }
+
+          if (tid) {
+            const li = document.createElement("li");
+            const line = document.createElement("div");
+            line.className = "history-line";
+            const span = document.createElement("span");
+            span.textContent = formatHistoryBullet(e.date, e.time, e.tirage);
+            const act = document.createElement("div");
+            act.className = "history-actions";
+            act.innerHTML =
+              '<button type="button" class="ghost small" data-edit="' +
+              e.id +
+              '">Modifier</button> ' +
+              '<button type="button" class="ghost small danger" data-del="' +
+              e.id +
+              '">Supprimer</button>';
+            line.appendChild(span);
+            line.appendChild(act);
+            li.appendChild(line);
+            ulT.appendChild(li);
+          }
+        });
+
+        if (ulB.children.length === 0) {
+          const li = document.createElement("li");
+          li.style.color = "var(--muted)";
+          li.style.listStyle = "none";
+          li.style.marginLeft = "-1rem";
+          li.textContent = "Aucun biberon enregistré.";
+          ulB.appendChild(li);
+        }
+        if (ulT.children.length === 0) {
+          const li = document.createElement("li");
+          li.style.color = "var(--muted)";
+          li.style.listStyle = "none";
+          li.style.marginLeft = "-1rem";
+          li.textContent = "Aucun tirage enregistré.";
+          ulT.appendChild(li);
+        }
+
+        colBiberon.appendChild(ulB);
+        colTirage.appendChild(ulT);
+        twoCol.appendChild(colBiberon);
+        twoCol.appendChild(colTirage);
+        historyContainer.appendChild(twoCol);
+
+        historyContainer.querySelectorAll("[data-edit]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            openEdit(btn.getAttribute("data-edit"));
+          });
+        });
+        historyContainer.querySelectorAll("[data-del]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            confirmDelete(btn.getAttribute("data-del"));
+          });
+        });
+
+        renderHistoryAudit();
+      }
+
+      function renderHistoryAudit() {
+        const log = loadHistoryLog();
+        if (log.length === 0) return;
+
+        const wrap = document.createElement("div");
+        wrap.className = "card";
+        wrap.style.marginTop = "1.35rem";
+        wrap.innerHTML = "<h2>Journal des actions</h2><p style=\"margin:0 0 0.75rem;color:var(--muted);font-size:0.9rem\">Créations, modifications et suppressions récentes.</p>";
+
+        const ul = document.createElement("ul");
+        ul.style.cssText = "margin:0;padding-left:1.1rem;font-size:0.88rem;color:var(--muted);max-height:220px;overflow-y:auto;";
+        log.slice(0, 40).forEach((row) => {
+          const li = document.createElement("li");
+          li.style.marginBottom = "0.4rem";
+          const t = new Date(row.at);
+          const label = t.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+          let msg = "";
+          if (row.action === "create") msg = "Ajout";
+          else if (row.action === "update") msg = "Modification";
+          else if (row.action === "delete") msg = "Suppression";
+          else msg = row.action;
+          const snap = row.entry;
+          let detail = "";
+          if (snap) {
+            detail =
+              " — " +
+              (snap.date || "") +
+              " " +
+              (snap.time || "") +
+              " · tirage " +
+              (snap.tirage || 0) +
+              " ml · biberon " +
+              (snap.biberon || 0) +
+              " ml";
+            if (row.action === "update" && snap._prevDate != null) {
+              detail +=
+                " (avant : " +
+                snap._prevDate +
+                " " +
+                (snap._prevTime || "") +
+                " · " +
+                (snap._prevTirage || 0) +
+                " / " +
+                (snap._prevBiberon || 0) +
+                " ml)";
+            }
+          }
+          li.textContent = label + " · " + msg + detail;
+          ul.appendChild(li);
+        });
+        wrap.appendChild(ul);
+        historyContainer.appendChild(wrap);
+      }
+
+      document.getElementById("form-add").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        const tirage = parseInt(document.getElementById("add-tirage").value, 10) || 0;
+        const biberon = parseInt(document.getElementById("add-biberon").value, 10) || 0;
+        if (tirage === 0 && biberon === 0) {
+          alert("Indiquez au moins un volume pour le tirage ou le biberon.");
+          return;
+        }
+
+        const entry = {
+          id: uid(),
+          date: document.getElementById("add-date").value,
+          time: document.getElementById("add-time").value || "",
+          tirage,
+          biberon,
+          note: (document.getElementById("add-note").value || "").trim(),
+          createdAt: new Date().toISOString()
+        };
+
+        const entries = loadEntries();
+        entries.push(entry);
+        saveEntries(entries);
+        pushHistory("create", { ...entry });
+
+        document.getElementById("add-tirage").value = "";
+        document.getElementById("add-biberon").value = "";
+        document.getElementById("add-note").value = "";
+        addTime.value = nowTime();
+
+        renderTodayTable();
+        renderHistory();
+        renderDailyRecap();
+      });
+
+      document.getElementById("btn-reset-form").addEventListener("click", function () {
+        addDate.value = todayISODate();
+        addTime.value = nowTime();
+        document.getElementById("add-tirage").value = "";
+        document.getElementById("add-biberon").value = "";
+        document.getElementById("add-note").value = "";
+        renderTodayTable();
+      });
+
+      addDate.addEventListener("change", renderTodayTable);
+
+      const modalEdit = document.getElementById("modal-edit");
+      const formEdit = document.getElementById("form-edit");
+
+      function openEdit(id) {
+        const entries = loadEntries();
+        const e = entries.find((x) => x.id === id);
+        if (!e) return;
+
+        document.getElementById("edit-id").value = e.id;
+        document.getElementById("edit-date").value = e.date;
+        document.getElementById("edit-time").value = e.time || "";
+        document.getElementById("edit-tirage").value = e.tirage;
+        document.getElementById("edit-biberon").value = e.biberon;
+        document.getElementById("edit-note").value = e.note || "";
+
+        modalEdit.classList.add("open");
+        modalEdit.setAttribute("aria-hidden", "false");
+      }
+
+      function closeEdit() {
+        modalEdit.classList.remove("open");
+        modalEdit.setAttribute("aria-hidden", "true");
+      }
+
+      document.getElementById("modal-edit-cancel").addEventListener("click", closeEdit);
+      modalEdit.addEventListener("click", function (ev) {
+        if (ev.target === modalEdit) closeEdit();
+      });
+
+      formEdit.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        const id = document.getElementById("edit-id").value;
+        const tirage = parseInt(document.getElementById("edit-tirage").value, 10) || 0;
+        const biberon = parseInt(document.getElementById("edit-biberon").value, 10) || 0;
+        if (tirage === 0 && biberon === 0) {
+          alert("Indiquez au moins un volume pour le tirage ou le biberon.");
+          return;
+        }
+
+        const entries = loadEntries();
+        const idx = entries.findIndex((x) => x.id === id);
+        if (idx === -1) {
+          closeEdit();
+          return;
+        }
+
+        const before = { ...entries[idx] };
+        entries[idx] = {
+          ...entries[idx],
+          date: document.getElementById("edit-date").value,
+          time: document.getElementById("edit-time").value || "",
+          tirage,
+          biberon,
+          note: (document.getElementById("edit-note").value || "").trim()
+        };
+
+        saveEntries(entries);
+        pushHistory("update", {
+          ...entries[idx],
+          _prevDate: before.date,
+          _prevTime: before.time,
+          _prevTirage: before.tirage,
+          _prevBiberon: before.biberon
+        });
+
+        closeEdit();
+        renderTodayTable();
+        renderHistory();
+        renderDailyRecap();
+      });
+
+      const modalConfirm = document.getElementById("modal-confirm");
+      let confirmCallback = null;
+
+      function openConfirm(title, text, onYes) {
+        document.getElementById("confirm-title").textContent = title;
+        document.getElementById("confirm-text").textContent = text;
+        confirmCallback = onYes;
+        modalConfirm.classList.add("open");
+        modalConfirm.setAttribute("aria-hidden", "false");
+      }
+
+      function closeConfirm() {
+        modalConfirm.classList.remove("open");
+        modalConfirm.setAttribute("aria-hidden", "true");
+        confirmCallback = null;
+      }
+
+      document.getElementById("confirm-yes").addEventListener("click", function () {
+        if (confirmCallback) confirmCallback();
+        closeConfirm();
+      });
+      document.getElementById("confirm-no").addEventListener("click", closeConfirm);
+      modalConfirm.addEventListener("click", function (ev) {
+        if (ev.target === modalConfirm) closeConfirm();
+      });
+
+      function confirmDelete(id) {
+        openConfirm(
+          "Supprimer cette entrée ?",
+          "Cette action est définitive pour la ligne du tableau. Un enregistrement reste dans le journal des actions.",
+          function () {
+            const entries = loadEntries();
+            const e = entries.find((x) => x.id === id);
+            const next = entries.filter((x) => x.id !== id);
+            if (e) pushHistory("delete", { ...e });
+            saveEntries(next);
+            renderTodayTable();
+            renderHistory();
+            renderDailyRecap();
+          }
+        );
+      }
+
+      document.getElementById("btn-load-demo").addEventListener("click", function () {
+        openConfirm(
+          "Charger la démo maquette ?",
+          "Vos entrées actuelles seront remplacées par l’exemple (23–25 mars, biberons + tirages comme sur l’image).",
+          loadDemoReplace
+        );
+      });
+
+      document.getElementById("btn-clear-all").addEventListener("click", function () {
+        openConfirm(
+          "Tout effacer ?",
+          "Toutes les entrées et le journal seront supprimés de ce navigateur.",
+          function () {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(HISTORY_KEY);
+            renderTodayTable();
+            renderHistory();
+            renderDailyRecap();
+          }
+        );
+      });
+
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", function () {
+          const id = tab.id.replace("tab-", "");
+          document.querySelectorAll(".tab").forEach((t) => {
+            t.setAttribute("aria-selected", t === tab ? "true" : "false");
+          });
+          document.querySelectorAll(".panel").forEach((p) => {
+            const active = p.id === "panel-" + id;
+            p.classList.toggle("active", active);
+            p.hidden = !active;
+          });
+          if (id === "historique") renderHistory();
+          if (id === "recap-jour") renderDailyRecap();
+        });
+      });
+
+      ensureDemoDataIfEmpty();
+      renderTodayTable();
+      renderHistory();
+      renderDailyRecap();
+    })();
+  </script>
+</body>
+</html>
