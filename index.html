@@ -93,6 +93,57 @@
       margin-right: auto;
     }
 
+    .baby-info {
+      max-width: 26rem;
+      margin: 0 auto 1.35rem;
+      padding: 1rem 1.15rem;
+      text-align: center;
+      background: linear-gradient(160deg, rgba(255, 254, 251, 0.95), var(--surface-muted));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .baby-info::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: var(--radius) 0 0 var(--radius);
+      background: linear-gradient(180deg, var(--biberon), var(--accent), var(--tirage));
+      opacity: 0.85;
+    }
+
+    .baby-info-title {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .baby-info-text {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .baby-info-text time {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .baby-info-weight {
+      color: var(--text);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
     .lead {
       margin: 0 0 1rem;
       color: var(--muted);
@@ -1202,6 +1253,13 @@
       <p>Suivi quotidien — modifier, supprimer, tout est conservé dans l’historique.</p>
     </header>
 
+    <aside class="baby-info" aria-labelledby="baby-info-heading">
+      <h2 id="baby-info-heading" class="baby-info-title">Information Éléonore</h2>
+      <p class="baby-info-text">
+        Née le <time datetime="2026-03-14T11:47">14/03/2026 à 11h47</time> à <span class="baby-info-weight">3,454 kg</span>
+      </p>
+    </aside>
+
     <div class="tabs" role="tablist">
       <button type="button" class="tab" role="tab" id="tab-aujourdhui" aria-selected="true" aria-controls="panel-aujourdhui">Aujourd’hui</button>
       <button type="button" class="tab" role="tab" id="tab-historique" aria-selected="false" aria-controls="panel-historique">Historique</button>
@@ -1714,6 +1772,15 @@
       function saveEntries(entries) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
         scheduleCloudPush();
+      }
+
+      /** Retour haptique court après une saisie enregistrée (mobile : API Vibration). */
+      function hapticSuccess() {
+        try {
+          if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+            navigator.vibrate(20);
+          }
+        } catch (_e) {}
       }
 
       /** Données d’exemple identiques à la maquette (biberons Éléonore / tirages Andéole), 23–25 mars. */
@@ -2413,6 +2480,7 @@
         entries.push(entry);
         saveEntries(entries);
         pushHistory("create", { ...entry });
+        hapticSuccess();
 
         document.getElementById("add-tirage").value = "";
         document.getElementById("add-biberon").value = "";
@@ -2499,6 +2567,7 @@
           _prevTirage: before.tirage,
           _prevBiberon: before.biberon
         });
+        hapticSuccess();
 
         closeEdit();
         renderTodayTable();
