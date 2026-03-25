@@ -430,6 +430,27 @@
       color: #4d7a6e;
     }
 
+    .history-column .history-count {
+      font-size: 0.86rem;
+      margin: 0 0 0.75rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .history-column .history-count strong {
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .history-column.biberon-col .history-count strong {
+      color: #4a5f78;
+    }
+
+    .history-column.tirage-col .history-count strong {
+      color: #3d6b5e;
+    }
+
     ul.history-list {
       margin: 0;
       padding-left: 1.15rem;
@@ -562,8 +583,20 @@
       border-left: 2px solid rgba(143, 168, 196, 0.35);
     }
 
+    .recap-jour-table th,
+    .recap-jour-table td {
+      font-size: 0.88rem;
+    }
+
+    .recap-jour-table td.recap-nb {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+
     @media (max-width: 520px) {
-      th:nth-child(5), td:nth-child(5) {
+      #panel-aujourdhui th:nth-child(5),
+      #panel-aujourdhui td:nth-child(5) {
         display: none;
       }
     }
@@ -653,6 +686,38 @@
     .footer-actions button {
       font-size: 0.78rem;
     }
+
+    .lock-remember {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin: 0 0 1rem;
+      font-size: 0.86rem;
+      line-height: 1.4;
+      color: var(--muted);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lock-remember input {
+      margin-top: 0.2rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      flex-shrink: 0;
+      accent-color: var(--text);
+    }
+
+    .lock-username-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
 </head>
 <body>
@@ -663,24 +728,77 @@
 
       <p id="lock-error" class="lock-error" role="alert" hidden></p>
 
-      <form id="form-lock-setup" hidden>
+      <form id="form-lock-setup" hidden method="post" action="#" autocomplete="on">
+        <input
+          type="text"
+          class="lock-username-hidden"
+          name="username"
+          id="lock-username-setup"
+          autocomplete="username"
+          value="Poupette Suivi"
+          readonly
+          tabindex="-1"
+          aria-hidden="true"
+        />
         <p class="form-when-title" style="margin-bottom: 0.75rem">Première utilisation : choisissez un mot de passe</p>
         <div style="margin-bottom: 0.75rem">
           <label for="lock-setup-pw">Mot de passe</label>
-          <input type="password" id="lock-setup-pw" autocomplete="new-password" minlength="4" required />
+          <input
+            type="password"
+            id="lock-setup-pw"
+            name="new-password"
+            autocomplete="new-password"
+            minlength="4"
+            required
+            inputmode="text"
+          />
         </div>
-        <div style="margin-bottom: 1rem">
+        <div style="margin-bottom: 0.75rem">
           <label for="lock-setup-pw2">Confirmer</label>
-          <input type="password" id="lock-setup-pw2" autocomplete="new-password" minlength="4" required />
+          <input
+            type="password"
+            id="lock-setup-pw2"
+            name="new-password-confirm"
+            autocomplete="new-password"
+            minlength="4"
+            required
+            inputmode="text"
+          />
         </div>
+        <label class="lock-remember">
+          <input type="checkbox" id="lock-remember-setup" />
+          <span>Rester connecté sur cet appareil (ne pas redemander le mot de passe à la prochaine ouverture)</span>
+        </label>
         <button type="submit" class="primary" style="width: 100%">Enregistrer et accéder</button>
       </form>
 
-      <form id="form-lock-login" hidden>
-        <div style="margin-bottom: 1rem">
+      <form id="form-lock-login" hidden method="post" action="#" autocomplete="on">
+        <input
+          type="text"
+          class="lock-username-hidden"
+          name="username"
+          id="lock-username-login"
+          autocomplete="username"
+          value="Poupette Suivi"
+          readonly
+          tabindex="-1"
+          aria-hidden="true"
+        />
+        <div style="margin-bottom: 0.75rem">
           <label for="lock-password">Mot de passe</label>
-          <input type="password" id="lock-password" autocomplete="current-password" required />
+          <input
+            type="password"
+            id="lock-password"
+            name="password"
+            autocomplete="current-password"
+            required
+            inputmode="text"
+          />
         </div>
+        <label class="lock-remember">
+          <input type="checkbox" id="lock-remember-login" />
+          <span>Rester connecté sur cet appareil (ne pas redemander le mot de passe à la prochaine ouverture)</span>
+        </label>
         <button type="submit" class="primary" style="width: 100%">Déverrouiller</button>
       </form>
 
@@ -798,15 +916,17 @@
       <div class="card">
         <h2>Totaux par jour</h2>
         <p style="margin: 0 0 1rem; color: var(--muted); font-size: 0.92rem;">
-          Un seul résumé par date : total tirage et total biberon (sans détail des heures).
+          Par jour : <strong>nombre de séances</strong> (chiffres) et <strong>volumes en ml</strong> (sans détail des heures).
         </p>
         <div style="overflow-x: auto;">
-          <table>
+          <table class="recap-jour-table">
             <thead>
               <tr>
                 <th>Date</th>
-                <th class="col-tirage">🤱 Total tirage</th>
-                <th class="col-biberon">🍼 Total biberon</th>
+                <th class="col-tirage">🤱 Nb de tirages</th>
+                <th class="col-tirage">Volume tirage</th>
+                <th class="col-biberon">🍼 Nb de biberons</th>
+                <th class="col-biberon">Volume biberon</th>
               </tr>
             </thead>
             <tbody id="tbody-recap-jour"></tbody>
@@ -913,6 +1033,8 @@
       const NAMES_KEY = "poupette_recap_names_v1";
       const PWD_HASH_KEY = "poupette_pwd_hash_v1";
       const SESSION_KEY = "poupette_session_unlock_v1";
+      /** Session longue durée (mobile / « rester connecté ») */
+      const PERSISTENT_UNLOCK_KEY = "poupette_rester_connecte_v1";
       /** Mot de passe d’accès : EleonorePB (empreinte SHA-256, ne pas modifier sauf si vous changez le mot de passe) */
       const PRESET_PASSWORD_HASH =
         "19f5a6f5297200f374a656c90d65b34dd2d8b9c4955784e8d31eb1273d753fa0";
@@ -1197,9 +1319,15 @@
         const byDay = {};
         entries.forEach(function (e) {
           if (!e.date) return;
-          if (!byDay[e.date]) byDay[e.date] = { tirage: 0, biberon: 0 };
-          byDay[e.date].tirage += Number(e.tirage) || 0;
-          byDay[e.date].biberon += Number(e.biberon) || 0;
+          if (!byDay[e.date]) {
+            byDay[e.date] = { tirageMl: 0, biberonMl: 0, nbTirage: 0, nbBiberon: 0 };
+          }
+          const t = Number(e.tirage) || 0;
+          const b = Number(e.biberon) || 0;
+          byDay[e.date].tirageMl += t;
+          byDay[e.date].biberonMl += b;
+          if (t > 0) byDay[e.date].nbTirage++;
+          if (b > 0) byDay[e.date].nbBiberon++;
         });
 
         const dates = Object.keys(byDay).sort(function (a, b) {
@@ -1218,8 +1346,18 @@
           const tr = document.createElement("tr");
           tr.innerHTML =
             "<td>" + escapeHtml(formatDateLabel(d)) + "</td>" +
-            '<td class="col-tirage">' + tot.tirage + " ml</td>" +
-            '<td class="col-biberon">' + tot.biberon + " ml</td>";
+            '<td class="col-tirage recap-nb">' +
+            tot.nbTirage +
+            "</td>" +
+            '<td class="col-tirage">' +
+            tot.tirageMl +
+            " ml</td>" +
+            '<td class="col-biberon recap-nb">' +
+            tot.nbBiberon +
+            "</td>" +
+            '<td class="col-biberon">' +
+            tot.biberonMl +
+            " ml</td>";
           tbody.appendChild(tr);
         });
       }
@@ -1242,6 +1380,13 @@
 
         const names = loadNames();
 
+        let nbBiberons = 0;
+        let nbTirages = 0;
+        entries.forEach(function (e) {
+          if ((Number(e.biberon) || 0) > 0) nbBiberons++;
+          if ((Number(e.tirage) || 0) > 0) nbTirages++;
+        });
+
         const twoCol = document.createElement("div");
         twoCol.className = "history-two-col";
 
@@ -1251,7 +1396,10 @@
           "<h3>Historique biberons</h3>" +
           "<p class=\"history-sub\">🍼 Historique biberons — " +
           escapeHtml(names.biberon) +
-          "</p>";
+          "</p>" +
+          "<p class=\"history-count\">Nombre de prises au biberon : <strong>" +
+          nbBiberons +
+          "</strong></p>";
         const ulB = document.createElement("ul");
         ulB.className = "history-list";
 
@@ -1261,7 +1409,8 @@
           "<h3>Historique tirages</h3>" +
           "<p class=\"history-sub\">🤱 Historique tirages — " +
           escapeHtml(names.tirage) +
-          "</p>";
+          "</p>" +
+          "<p class=\"history-count\">Nombre de tirages : <strong>" + nbTirages + "</strong></p>";
         const ulT = document.createElement("ul");
         ulT.className = "history-list";
 
@@ -1617,6 +1766,28 @@
         }
       }
 
+      function isUnlocked() {
+        if (!localStorage.getItem(PWD_HASH_KEY)) return false;
+        return (
+          sessionStorage.getItem(SESSION_KEY) === "1" ||
+          localStorage.getItem(PERSISTENT_UNLOCK_KEY) === "1"
+        );
+      }
+
+      function markUnlocked(rememberDevice) {
+        sessionStorage.setItem(SESSION_KEY, "1");
+        if (rememberDevice) {
+          localStorage.setItem(PERSISTENT_UNLOCK_KEY, "1");
+        } else {
+          localStorage.removeItem(PERSISTENT_UNLOCK_KEY);
+        }
+      }
+
+      function clearAllUnlockTokens() {
+        sessionStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(PERSISTENT_UNLOCK_KEY);
+      }
+
       function configureLockUI() {
         const hasPwd = !!localStorage.getItem(PWD_HASH_KEY);
         formLockSetup.hidden = hasPwd;
@@ -1625,10 +1796,13 @@
         setLockError("");
         if (hasPwd) {
           document.getElementById("lock-password").value = "";
+          document.getElementById("lock-remember-login").checked =
+            localStorage.getItem(PERSISTENT_UNLOCK_KEY) === "1";
           document.getElementById("lock-password").focus();
         } else {
           document.getElementById("lock-setup-pw").value = "";
           document.getElementById("lock-setup-pw2").value = "";
+          document.getElementById("lock-remember-setup").checked = false;
           document.getElementById("lock-setup-pw").focus();
         }
       }
@@ -1639,7 +1813,7 @@
       }
 
       function lockApp() {
-        sessionStorage.removeItem(SESSION_KEY);
+        clearAllUnlockTokens();
         appRoot.hidden = true;
         lockScreen.hidden = false;
         configureLockUI();
@@ -1668,7 +1842,7 @@
         try {
           const h = await hashPassword(a);
           localStorage.setItem(PWD_HASH_KEY, h);
-          sessionStorage.setItem(SESSION_KEY, "1");
+          markUnlocked(document.getElementById("lock-remember-setup").checked);
           unlockApp();
           runAfterUnlock();
         } catch (err) {
@@ -1686,7 +1860,7 @@
         try {
           const h = await hashPassword(pw);
           if (h === stored) {
-            sessionStorage.setItem(SESSION_KEY, "1");
+            markUnlocked(document.getElementById("lock-remember-login").checked);
             unlockApp();
             runAfterUnlock();
           } else {
@@ -1706,7 +1880,7 @@
             localStorage.removeItem(HISTORY_KEY);
             localStorage.removeItem(NAMES_KEY);
             localStorage.removeItem(PWD_HASH_KEY);
-            sessionStorage.removeItem(SESSION_KEY);
+            clearAllUnlockTokens();
             setLockError("");
             formLockLogin.hidden = true;
             formLockSetup.hidden = false;
@@ -1780,7 +1954,7 @@
         }
       });
 
-      if (sessionStorage.getItem(SESSION_KEY) === "1" && localStorage.getItem(PWD_HASH_KEY)) {
+      if (isUnlocked()) {
         unlockApp();
         runAfterUnlock();
       } else {
