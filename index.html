@@ -1666,6 +1666,16 @@
             <span class="chip-label">Biberons</span>
             <span class="chip-value" id="chip-val-nb-biberon">0</span>
           </div>
+          <div class="chip chip--tirage" id="chip-delta-tirage">
+            <i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i>
+            <span class="chip-label">Écart tirage</span>
+            <span class="chip-value" id="chip-val-delta-tirage">—</span>
+          </div>
+          <div class="chip chip--biberon" id="chip-delta-biberon">
+            <i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i>
+            <span class="chip-label">Écart biberon</span>
+            <span class="chip-value" id="chip-val-delta-biberon">—</span>
+          </div>
           <div class="chip chip--last" id="chip-last">
             <i class="fa-regular fa-clock" aria-hidden="true"></i>
             <span class="chip-label">Dernière</span>
@@ -2377,18 +2387,55 @@
         const list = sortEntries(getSelectedDayEntries());
         tbodyAujourdhui.innerHTML = "";
 
+        function minutesFromTimeStr(t) {
+          const m = /^(\d{1,2}):(\d{2})$/.exec(String(t || "").trim());
+          if (!m) return null;
+          const hh = Number(m[1]);
+          const mm = Number(m[2]);
+          if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+          if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
+          return hh * 60 + mm;
+        }
+
+        function formatDeltaMinutes(mins) {
+          if (mins == null) return "—";
+          if (mins < 0) return "—";
+          const h = Math.floor(mins / 60);
+          const m = mins % 60;
+          if (h <= 0) return m + " min";
+          return h + " h " + String(m).padStart(2, "0");
+        }
+
         let sumT = 0;
         let sumB = 0;
         let nbT = 0;
         let nbB = 0;
         let lastTime = "";
+        let lastTMin = null;
+        let prevTMin = null;
+        let lastBMin = null;
+        let prevBMin = null;
 
         list.forEach((e) => {
           sumT += Number(e.tirage) || 0;
           sumB += Number(e.biberon) || 0;
-          if ((Number(e.tirage) || 0) > 0) nbT++;
-          if ((Number(e.biberon) || 0) > 0) nbB++;
+          const tMl = Number(e.tirage) || 0;
+          const bMl = Number(e.biberon) || 0;
+          if (tMl > 0) nbT++;
+          if (bMl > 0) nbB++;
           if (e.time) lastTime = e.time;
+
+          const mins = minutesFromTimeStr(e.time);
+          if (mins != null) {
+            if (tMl > 0) {
+              if (lastTMin == null) lastTMin = mins;
+              else if (prevTMin == null) prevTMin = mins;
+            }
+            if (bMl > 0) {
+              if (lastBMin == null) lastBMin = mins;
+              else if (prevBMin == null) prevBMin = mins;
+            }
+          }
 
           const tr = document.createElement("tr");
           tr.dataset.entryId = e.id;
@@ -2414,11 +2461,15 @@
         const elNbT = document.getElementById("chip-val-nb-tirage");
         const elNbB = document.getElementById("chip-val-nb-biberon");
         const elLast = document.getElementById("chip-val-last");
+        const elDeltaT = document.getElementById("chip-val-delta-tirage");
+        const elDeltaB = document.getElementById("chip-val-delta-biberon");
         if (elNbT) elNbT.textContent = String(nbT);
         if (elNbB) elNbB.textContent = String(nbB);
         if (elLast) elLast.textContent = lastTime || "—";
+        if (elDeltaT) elDeltaT.textContent = formatDeltaMinutes(prevTMin == null || lastTMin == null ? null : prevTMin - lastTMin);
+        if (elDeltaB) elDeltaB.textContent = formatDeltaMinutes(prevBMin == null || lastBMin == null ? null : prevBMin - lastBMin);
         if (highlightEntryId) {
-          ["chip-nb-tirage", "chip-nb-biberon", "chip-last"].forEach(function (id) {
+          ["chip-nb-tirage", "chip-nb-biberon", "chip-delta-tirage", "chip-delta-biberon", "chip-last"].forEach(function (id) {
             const chip = document.getElementById(id);
             if (!chip) return;
             chip.classList.remove("chip-pop");
