@@ -652,6 +652,91 @@
       100% { transform: scale(1); }
     }
 
+    .growth-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      align-items: end;
+    }
+
+    .growth-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.35rem;
+    }
+
+    .growth-stats .chip {
+      font-size: 0.82rem;
+    }
+
+    .growth-entry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.7rem;
+      align-items: end;
+      margin-top: 0.5rem;
+    }
+
+    .growth-entry-actions {
+      margin-top: 0.55rem;
+    }
+
+    .growth-table-wrap {
+      margin-top: 0.9rem;
+    }
+
+    .growth-table-wrap table {
+      min-width: 420px;
+    }
+
+    .growth-protected {
+      transition: filter 0.2s var(--ease), opacity 0.2s var(--ease);
+    }
+
+    #panel-croissance.growth-locked .growth-protected {
+      filter: grayscale(1) blur(1.6px);
+      opacity: 0.5;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .growth-lock-overlay {
+      display: none;
+      position: sticky;
+      bottom: 1rem;
+      z-index: 6;
+      margin-top: 0.8rem;
+    }
+
+    #panel-croissance.growth-locked .growth-lock-overlay {
+      display: block;
+    }
+
+    .growth-lock-box {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 0.9rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      background: linear-gradient(165deg, rgba(239, 247, 246, 0.98) 0%, rgba(247, 214, 224, 0.96) 100%);
+      backdrop-filter: blur(4px);
+    }
+
+    .growth-lock-box h3 {
+      margin: 0 0 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .growth-lock-box p {
+      margin: 0 0 0.6rem;
+      color: var(--text-muted);
+    }
+
     .total-box {
       padding: 1rem 1.1rem;
       border-radius: var(--radius-sm);
@@ -1890,6 +1975,9 @@
       <button type="button" class="tab" role="tab" id="tab-aujourdhui" aria-selected="true" aria-controls="panel-aujourdhui">
         <i class="fa-solid fa-calendar-day" aria-hidden="true"></i>Aujourd’hui
       </button>
+      <button type="button" class="tab" role="tab" id="tab-croissance" aria-selected="false" aria-controls="panel-croissance">
+        <i class="fa-solid fa-baby" aria-hidden="true"></i>Croissance
+      </button>
       <button type="button" class="tab" role="tab" id="tab-historique" aria-selected="false" aria-controls="panel-historique">
         <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>Historique
       </button>
@@ -2011,6 +2099,107 @@
         </div>
         <div class="day-timeline" id="day-timeline" aria-label="Timeline du jour"></div>
         <p class="empty" id="empty-aujourdhui" hidden>Aucune entrée pour cette date. Ajoutez une ligne ci-dessus.</p>
+      </div>
+    </section>
+
+    <section id="panel-croissance" class="panel" role="tabpanel" aria-labelledby="tab-croissance" hidden>
+      <div class="growth-protected" id="growth-protected">
+      <div class="card">
+        <h2><i class="fa-solid fa-baby" aria-hidden="true"></i> Croissance & âge</h2>
+        <div class="growth-grid">
+          <div>
+            <label for="baby-birth-date">Date de naissance (fixée)</label>
+            <input type="date" id="baby-birth-date" disabled />
+          </div>
+          <div>
+            <label for="baby-birth-time">Heure</label>
+            <input type="time" id="baby-birth-time" />
+          </div>
+          <div>
+            <label for="baby-weight">Poids (kg)</label>
+            <input type="number" id="baby-weight" min="0" step="0.001" inputmode="decimal" placeholder="3.454" />
+          </div>
+          <div>
+            <label for="baby-size">Taille (cm)</label>
+            <input type="number" id="baby-size" min="0" step="0.1" inputmode="decimal" placeholder="50.0" />
+          </div>
+        </div>
+        <div class="growth-stats" aria-live="polite">
+          <div class="chip chip--last">
+            <i class="fa-solid fa-calendar-week" aria-hidden="true"></i>
+            <span class="chip-label">Âge exact</span>
+            <span class="chip-value" id="baby-age-exact">—</span>
+          </div>
+          <div class="chip chip--tirage">
+            <i class="fa-solid fa-weight-scale" aria-hidden="true"></i>
+            <span class="chip-label">Poids</span>
+            <span class="chip-value" id="baby-weight-display">—</span>
+          </div>
+          <div class="chip chip--biberon">
+            <i class="fa-solid fa-ruler-vertical" aria-hidden="true"></i>
+            <span class="chip-label">Taille</span>
+            <span class="chip-value" id="baby-size-display">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2><i class="fa-solid fa-plus" aria-hidden="true"></i> Nouvelle entrée croissance</h2>
+        <div class="growth-entry-grid">
+          <div>
+            <label for="growth-date">Date</label>
+            <input type="date" id="growth-date" />
+          </div>
+          <div>
+            <label for="growth-weight">Poids (kg)</label>
+            <input type="number" id="growth-weight" min="0" step="0.001" inputmode="decimal" placeholder="4.200" />
+          </div>
+          <div>
+            <label for="growth-size">Taille (cm)</label>
+            <input type="number" id="growth-size" min="0" step="0.1" inputmode="decimal" placeholder="54.0" />
+          </div>
+        </div>
+        <div class="btn-row growth-entry-actions">
+          <button type="button" class="primary" id="btn-growth-add">Ajouter l’entrée</button>
+        </div>
+        <div class="table-scroll growth-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Poids</th>
+                <th>Taille</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-growth"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="empty-growth" hidden>Aucune entrée croissance.</p>
+      </div>
+      <div class="card">
+        <h2><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Courbes croissance</h2>
+        <h3 class="chart-section-title">Poids (kg)</h3>
+        <div class="chart-canvas-wrap small">
+          <canvas id="chart-growth-weight" aria-label="Courbe de poids"></canvas>
+        </div>
+        <h3 class="chart-section-title">Taille (cm)</h3>
+        <div class="chart-canvas-wrap small">
+          <canvas id="chart-growth-size" aria-label="Courbe de taille"></canvas>
+        </div>
+      </div>
+      </div>
+      <div class="growth-lock-overlay" id="growth-lock-overlay">
+        <div class="growth-lock-box">
+          <h3><i class="fa-solid fa-lock" aria-hidden="true"></i> Section protégée</h3>
+          <p>Entrez le même mot de passe que la page principale pour afficher la croissance.</p>
+          <form id="form-growth-unlock">
+            <label for="growth-unlock-password">Mot de passe</label>
+            <input type="password" id="growth-unlock-password" autocomplete="current-password" required />
+            <p id="growth-unlock-error" class="lock-error" hidden></p>
+            <div class="btn-row">
+              <button type="submit" class="primary">Afficher la section</button>
+            </div>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -2232,6 +2421,19 @@
       const STORAGE_KEY = "poupette_recap_lait_v1";
       const HISTORY_KEY = "poupette_recap_historique_v1";
       const NAMES_KEY = "poupette_recap_names_v1";
+      const BABY_PROFILE_KEY = "poupette_baby_profile_v1";
+      const BABY_GROWTH_LOG_KEY = "poupette_baby_growth_log_v1";
+      const FIXED_BIRTH_DATE = "2026-03-14";
+      const DEFAULT_GROWTH_WEIGHTS = [
+        { date: "2026-03-17", weightKg: 3.315 },
+        { date: "2026-03-18", weightKg: 3.32 },
+        { date: "2026-03-19", weightKg: 3.345 },
+        { date: "2026-03-20", weightKg: 3.3 },
+        { date: "2026-03-21", weightKg: 3.22 },
+        { date: "2026-03-22", weightKg: 3.4 },
+        { date: "2026-03-24", weightKg: 3.54 },
+        { date: "2026-03-26", weightKg: 3.6 }
+      ];
       const PWD_HASH_KEY = "poupette_pwd_hash_v1";
       const SESSION_KEY = "poupette_session_unlock_v1";
       /** Session longue durée (mobile / « rester connecté ») */
@@ -2247,6 +2449,8 @@
       let chartMode = "day";
       let chartMlInstance = null;
       let chartPrisesInstance = null;
+      let chartGrowthWeightInstance = null;
+      let chartGrowthSizeInstance = null;
       /** Mot de passe d’accès : EleonorePB (empreinte SHA-256, ne pas modifier sauf si vous changez le mot de passe) */
       const PRESET_PASSWORD_HASH =
         "19f5a6f5297200f374a656c90d65b34dd2d8b9c4955784e8d31eb1273d753fa0";
@@ -2289,6 +2493,57 @@
       function nowTime() {
         const d = new Date();
         return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+      }
+
+      function loadBabyProfile() {
+        const defaults = {
+          birthDate: FIXED_BIRTH_DATE,
+          birthTime: "11:47",
+          weightKg: "3.454",
+          sizeCm: ""
+        };
+        try {
+          const raw = localStorage.getItem(BABY_PROFILE_KEY);
+          if (!raw) return defaults;
+          const x = JSON.parse(raw);
+          return {
+            birthDate: FIXED_BIRTH_DATE,
+            birthTime: typeof x.birthTime === "string" ? x.birthTime : defaults.birthTime,
+            weightKg: typeof x.weightKg === "string" ? x.weightKg : defaults.weightKg,
+            sizeCm: typeof x.sizeCm === "string" ? x.sizeCm : defaults.sizeCm
+          };
+        } catch {
+          return defaults;
+        }
+      }
+
+      function saveBabyProfile(profile) {
+        localStorage.setItem(
+          BABY_PROFILE_KEY,
+          JSON.stringify({
+            birthDate: FIXED_BIRTH_DATE,
+            birthTime: (profile && profile.birthTime) || "",
+            weightKg: (profile && profile.weightKg) || "",
+            sizeCm: (profile && profile.sizeCm) || ""
+          })
+        );
+        scheduleCloudPush();
+      }
+
+      function loadBabyGrowthLog() {
+        try {
+          const raw = localStorage.getItem(BABY_GROWTH_LOG_KEY);
+          if (!raw) return [];
+          const arr = JSON.parse(raw);
+          return Array.isArray(arr) ? arr : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveBabyGrowthLog(log) {
+        localStorage.setItem(BABY_GROWTH_LOG_KEY, JSON.stringify(log));
+        scheduleCloudPush();
       }
 
       function firebaseConfigured() {
@@ -2407,6 +2662,8 @@
           {
             entries: loadEntries(),
             names: loadNames(),
+            babyProfile: loadBabyProfile(),
+            babyGrowthLog: loadBabyGrowthLog(),
             historyLog: loadHistoryLog(),
             updatedAt: firebase.database.ServerValue.TIMESTAMP
           },
@@ -2466,7 +2723,15 @@
             if (v.names && typeof v.names === "object") {
               saveNames(v.names);
             }
+            if (v.babyProfile && typeof v.babyProfile === "object") {
+              saveBabyProfile(v.babyProfile);
+            }
+            if (v.babyGrowthLog && Array.isArray(v.babyGrowthLog)) {
+              saveBabyGrowthLog(v.babyGrowthLog);
+            }
             applyNamesToInputs();
+            renderBabyProfile(true);
+            renderGrowthSection();
             if (v.historyLog && Array.isArray(v.historyLog)) {
               saveHistoryLog(v.historyLog);
             }
@@ -2604,6 +2869,29 @@
         applyNamesToInputs();
       }
 
+      function ensureDefaultGrowthWeights() {
+        const current = loadBabyGrowthLog();
+        const present = new Set(
+          current.map(function (x) {
+            return String(x.date || "") + "|" + String(x.weightKg == null ? "" : x.weightKg);
+          })
+        );
+        let changed = false;
+        DEFAULT_GROWTH_WEIGHTS.forEach(function (row) {
+          const key = row.date + "|" + row.weightKg;
+          if (present.has(key)) return;
+          current.push({
+            id: uid(),
+            date: row.date,
+            weightKg: row.weightKg,
+            sizeCm: null,
+            createdAt: new Date().toISOString()
+          });
+          changed = true;
+        });
+        if (changed) saveBabyGrowthLog(current);
+      }
+
       function loadDemoReplace() {
         saveEntries(buildDemoEntries());
         saveNames({ biberon: "Éléonore", tirage: "Andéole" });
@@ -2661,10 +2949,211 @@
       const totalBiberon = document.getElementById("total-biberon");
       const bottleFill = document.getElementById("bottle-fill");
       const bottleCaption = document.getElementById("bottle-caption");
+      const babyBirthDate = document.getElementById("baby-birth-date");
+      const babyBirthTime = document.getElementById("baby-birth-time");
+      const babyWeight = document.getElementById("baby-weight");
+      const babySize = document.getElementById("baby-size");
+      const babyAgeExact = document.getElementById("baby-age-exact");
+      const babyWeightDisplay = document.getElementById("baby-weight-display");
+      const babySizeDisplay = document.getElementById("baby-size-display");
+      const growthDateInput = document.getElementById("growth-date");
+      const growthWeightInput = document.getElementById("growth-weight");
+      const growthSizeInput = document.getElementById("growth-size");
+      const growthPanel = document.getElementById("panel-croissance");
+      const growthUnlockForm = document.getElementById("form-growth-unlock");
+      const growthUnlockPassword = document.getElementById("growth-unlock-password");
+      const growthUnlockError = document.getElementById("growth-unlock-error");
       const historyContainer = document.getElementById("history-container");
       const emptyHistorique = document.getElementById("empty-historique");
       const inputNameBiberon = document.getElementById("name-biberon");
       const inputNameTirage = document.getElementById("name-tirage");
+      let growthSectionUnlocked = false;
+
+      function setGrowthUnlockError(msg) {
+        if (!growthUnlockError) return;
+        if (!msg) {
+          growthUnlockError.hidden = true;
+          growthUnlockError.textContent = "";
+        } else {
+          growthUnlockError.textContent = msg;
+          growthUnlockError.hidden = false;
+        }
+      }
+
+      function applyGrowthLockState() {
+        if (!growthPanel) return;
+        growthPanel.classList.toggle("growth-locked", !growthSectionUnlocked);
+        if (growthUnlockPassword) {
+          growthUnlockPassword.value = "";
+          if (!growthSectionUnlocked && !growthPanel.hidden) growthUnlockPassword.focus();
+        }
+        setGrowthUnlockError("");
+      }
+
+      function daysBetweenIso(a, b) {
+        try {
+          const pa = a.split("-").map(Number);
+          const pb = b.split("-").map(Number);
+          const da = Date.UTC(pa[0], pa[1] - 1, pa[2]);
+          const db = Date.UTC(pb[0], pb[1] - 1, pb[2]);
+          return Math.floor((db - da) / 86400000);
+        } catch {
+          return 0;
+        }
+      }
+
+      function renderBabyProfile(syncInputs) {
+        const p = loadBabyProfile();
+        if (syncInputs) {
+          if (babyBirthDate) babyBirthDate.value = FIXED_BIRTH_DATE;
+          if (babyBirthTime) babyBirthTime.value = p.birthTime || "";
+          if (babyWeight) babyWeight.value = p.weightKg || "";
+          if (babySize) babySize.value = p.sizeCm || "";
+        }
+        const refDate = addDate && addDate.value ? addDate.value : todayISODate();
+        const days = Math.max(0, daysBetweenIso(p.birthDate, refDate));
+        const weeks = Math.floor(days / 7);
+        const rem = days % 7;
+        if (babyAgeExact) babyAgeExact.textContent = weeks + " sem + " + rem + " j";
+        if (babyWeightDisplay) {
+          babyWeightDisplay.textContent = p.weightKg ? p.weightKg.replace(".", ",") + " kg" : "—";
+        }
+        if (babySizeDisplay) {
+          babySizeDisplay.textContent = p.sizeCm ? p.sizeCm.replace(".", ",") + " cm" : "—";
+        }
+      }
+
+      function persistBabyProfile() {
+        saveBabyProfile({
+          birthDate: (babyBirthDate && babyBirthDate.value) || "",
+          birthTime: (babyBirthTime && babyBirthTime.value) || "",
+          weightKg: (babyWeight && babyWeight.value) || "",
+          sizeCm: (babySize && babySize.value) || ""
+        });
+        renderBabyProfile(false);
+      }
+
+      [babyBirthDate, babyBirthTime, babyWeight, babySize].forEach(function (el) {
+        if (!el) return;
+        el.addEventListener("change", persistBabyProfile);
+      });
+
+      if (growthUnlockForm) {
+        growthUnlockForm.addEventListener("submit", async function (ev) {
+          ev.preventDefault();
+          setGrowthUnlockError("");
+          const pw = (growthUnlockPassword && growthUnlockPassword.value) || "";
+          if (!pw) {
+            setGrowthUnlockError("Entrez le mot de passe.");
+            return;
+          }
+          const stored = localStorage.getItem(PWD_HASH_KEY);
+          if (!stored) {
+            growthSectionUnlocked = true;
+            applyGrowthLockState();
+            return;
+          }
+          try {
+            const h = await hashPassword(pw);
+            if (h !== stored) {
+              setGrowthUnlockError("Mot de passe incorrect.");
+              return;
+            }
+            growthSectionUnlocked = true;
+            applyGrowthLockState();
+            renderGrowthSection();
+            showToast("Section croissance déverrouillée.", "ok");
+          } catch (_e) {
+            setGrowthUnlockError("Erreur de vérification.");
+          }
+        });
+      }
+
+      function renderGrowthCharts(log) {
+        if (typeof Chart === "undefined") return;
+        const cW = document.getElementById("chart-growth-weight");
+        const cS = document.getElementById("chart-growth-size");
+        if (!cW || !cS) return;
+
+        const sorted = [...log].sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+        const labels = sorted.map((x) => formatChartLabel(x.date || ""));
+        const wData = sorted.map((x) => (x.weightKg == null ? null : Number(x.weightKg)));
+        const sData = sorted.map((x) => (x.sizeCm == null ? null : Number(x.sizeCm)));
+
+        if (chartGrowthWeightInstance) {
+          chartGrowthWeightInstance.destroy();
+          chartGrowthWeightInstance = null;
+        }
+        if (chartGrowthSizeInstance) {
+          chartGrowthSizeInstance.destroy();
+          chartGrowthSizeInstance = null;
+        }
+
+        const lbl = labels.length ? labels : ["—"];
+        const w = labels.length ? wData : [0];
+        const s = labels.length ? sData : [0];
+
+        chartGrowthWeightInstance = new Chart(cW.getContext("2d"), {
+          type: "line",
+          data: {
+            labels: lbl,
+            datasets: [{ label: "Poids (kg)", data: w, borderColor: "#0d6b62", tension: 0.2 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+        });
+
+        chartGrowthSizeInstance = new Chart(cS.getContext("2d"), {
+          type: "line",
+          data: {
+            labels: lbl,
+            datasets: [{ label: "Taille (cm)", data: s, borderColor: "#0a6fa0", tension: 0.2 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+        });
+      }
+
+      function renderGrowthSection() {
+        if (growthDateInput && !growthDateInput.value) {
+          growthDateInput.value = todayISODate();
+        }
+        const tbody = document.getElementById("tbody-growth");
+        const empty = document.getElementById("empty-growth");
+        if (!tbody || !empty) return;
+        const log = loadBabyGrowthLog();
+        const sorted = [...log].sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+        tbody.innerHTML = "";
+        if (!sorted.length) {
+          empty.hidden = false;
+        } else {
+          empty.hidden = true;
+          sorted.forEach(function (x) {
+            const tr = document.createElement("tr");
+            tr.innerHTML =
+              "<td>" + escapeHtml(formatDateLabel(x.date || "")) + "</td>" +
+              "<td>" + (x.weightKg != null ? String(x.weightKg).replace(".", ",") + " kg" : "—") + "</td>" +
+              "<td>" + (x.sizeCm != null ? String(x.sizeCm).replace(".", ",") + " cm" : "—") + "</td>";
+            tbody.appendChild(tr);
+          });
+        }
+        renderGrowthCharts(log);
+      }
+
+      document.getElementById("btn-growth-add").addEventListener("click", function () {
+        const date = (growthDateInput && growthDateInput.value) || todayISODate();
+        const w = growthWeightInput && growthWeightInput.value ? Number(growthWeightInput.value) : null;
+        const s = growthSizeInput && growthSizeInput.value ? Number(growthSizeInput.value) : null;
+        if (w == null && s == null) {
+          showToast("Ajoutez au moins un poids ou une taille.", "error");
+          return;
+        }
+        const log = loadBabyGrowthLog();
+        log.push({ id: uid(), date: date, weightKg: w, sizeCm: s, createdAt: new Date().toISOString() });
+        saveBabyGrowthLog(log);
+        if (growthWeightInput) growthWeightInput.value = "";
+        if (growthSizeInput) growthSizeInput.value = "";
+        renderGrowthSection();
+        showToast("Entrée croissance ajoutée.", "ok");
+      });
 
       function loadNames() {
         try {
@@ -3464,7 +3953,10 @@
         renderTodayTable();
       });
 
-      addDate.addEventListener("change", renderTodayTable);
+      addDate.addEventListener("change", function () {
+        renderTodayTable();
+        renderBabyProfile(false);
+      });
 
       const modalEdit = document.getElementById("modal-edit");
       const formEdit = document.getElementById("form-edit");
@@ -3598,9 +4090,13 @@
           function () {
             localStorage.removeItem(STORAGE_KEY);
             localStorage.removeItem(HISTORY_KEY);
+            localStorage.removeItem(BABY_PROFILE_KEY);
+            localStorage.removeItem(BABY_GROWTH_LOG_KEY);
             renderTodayTable();
             renderHistory();
             renderDailyRecap();
+            renderBabyProfile(true);
+            renderGrowthSection();
           }
         );
       });
@@ -3617,6 +4113,11 @@
             p.hidden = !active;
           });
           if (id === "historique") renderHistory();
+          if (id === "croissance") renderBabyProfile(false);
+          if (id === "croissance") {
+            applyGrowthLockState();
+            if (growthSectionUnlocked) renderGrowthSection();
+          }
           if (id === "recap-jour") renderDailyRecap();
           if (id === "graphiques") renderCharts();
           if (id === "sync") {
@@ -3661,6 +4162,8 @@
           exportedAt: new Date().toISOString(),
           entries: loadEntries(),
           names: loadNames(),
+          babyProfile: loadBabyProfile(),
+          babyGrowthLog: loadBabyGrowthLog(),
           historyLog: loadHistoryLog()
         };
         const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
@@ -3763,7 +4266,12 @@
 
       function runAfterUnlock() {
         ensureDemoDataIfEmpty();
+        ensureDefaultGrowthWeights();
+        growthSectionUnlocked = false;
+        applyGrowthLockState();
         initVolumeShortcuts();
+        renderBabyProfile(true);
+        renderGrowthSection();
         renderTodayTable();
         renderHistory();
         renderDailyRecap();
@@ -3782,7 +4290,15 @@
           if (bundle.names && typeof bundle.names === "object") {
             saveNames(bundle.names);
           }
+          if (bundle.babyProfile && typeof bundle.babyProfile === "object") {
+            saveBabyProfile(bundle.babyProfile);
+          }
+          if (bundle.babyGrowthLog && Array.isArray(bundle.babyGrowthLog)) {
+            saveBabyGrowthLog(bundle.babyGrowthLog);
+          }
           applyNamesToInputs();
+          renderBabyProfile(true);
+          renderGrowthSection();
           if (bundle.historyLog && Array.isArray(bundle.historyLog)) {
             saveHistoryLog(bundle.historyLog);
           }
@@ -3849,6 +4365,8 @@
             localStorage.removeItem(STORAGE_KEY);
             localStorage.removeItem(HISTORY_KEY);
             localStorage.removeItem(NAMES_KEY);
+            localStorage.removeItem(BABY_PROFILE_KEY);
+            localStorage.removeItem(BABY_GROWTH_LOG_KEY);
             localStorage.removeItem(PWD_HASH_KEY);
             clearAllUnlockTokens();
             setLockError("");
