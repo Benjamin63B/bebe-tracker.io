@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
   <style>
     :root {
       /* Palette : #7BDFF2 · #B2F7EF · #EFF7F6 · #F7D6E0 · #F2B5D4 */
@@ -167,6 +168,27 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-pill);
       box-shadow: var(--shadow-sm);
+    }
+
+    .tabs.tabs-sticky {
+      position: sticky;
+      top: 0.75rem;
+      z-index: 220;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 520px) {
+      .tabs.tabs-sticky {
+        top: 0.5rem;
+      }
+    }
+
+    .tab .fa-solid,
+    .tab .fa-regular,
+    .tab .fa-brands {
+      margin-right: 0.45rem;
+      opacity: 0.92;
     }
 
     .tab {
@@ -526,6 +548,69 @@
       grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
       gap: 0.85rem;
       margin-bottom: 1.1rem;
+    }
+
+    .stat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+      margin: -0.25rem 0 0.9rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.42rem 0.65rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: var(--shadow-sm);
+      color: var(--text);
+      font-size: 0.84rem;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .chip i {
+      opacity: 0.9;
+    }
+
+    .chip .chip-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .chip .chip-value {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chip.chip--tirage {
+      border-color: rgba(29, 176, 160, 0.35);
+      background: rgba(178, 247, 239, 0.42);
+    }
+
+    .chip.chip--biberon {
+      border-color: rgba(26, 159, 212, 0.35);
+      background: rgba(123, 223, 242, 0.3);
+    }
+
+    .chip.chip--last {
+      border-color: rgba(242, 181, 212, 0.6);
+      background: rgba(247, 214, 224, 0.42);
+    }
+
+    .chip.chip-pop {
+      animation: chipPop 0.55s cubic-bezier(0.34, 1.25, 0.64, 1);
+    }
+
+    @keyframes chipPop {
+      0% { transform: scale(1); }
+      55% { transform: scale(1.08); }
+      100% { transform: scale(1); }
     }
 
     .total-box {
@@ -1393,7 +1478,8 @@
       button.primary#btn-submit-add.btn-just-used,
       .badge.badge-pop,
       .tab[aria-selected="true"]::after,
-      .toast.toast--ok::after {
+      .toast.toast--ok::after,
+      .chip.chip-pop {
         animation: none !important;
       }
 
@@ -1507,12 +1593,22 @@
       <p>Suivi quotidien — modifier, supprimer, tout est conservé dans l’historique.</p>
     </header>
 
-    <div class="tabs" role="tablist">
-      <button type="button" class="tab" role="tab" id="tab-aujourdhui" aria-selected="true" aria-controls="panel-aujourdhui">Aujourd’hui</button>
-      <button type="button" class="tab" role="tab" id="tab-historique" aria-selected="false" aria-controls="panel-historique">Historique</button>
-      <button type="button" class="tab" role="tab" id="tab-recap-jour" aria-selected="false" aria-controls="panel-recap-jour">Totaux par jour</button>
-      <button type="button" class="tab" role="tab" id="tab-graphiques" aria-selected="false" aria-controls="panel-graphiques">Graphiques</button>
-      <button type="button" class="tab" role="tab" id="tab-sync" aria-selected="false" aria-controls="panel-sync">Partage</button>
+    <div class="tabs tabs-sticky" role="tablist">
+      <button type="button" class="tab" role="tab" id="tab-aujourdhui" aria-selected="true" aria-controls="panel-aujourdhui">
+        <i class="fa-solid fa-calendar-day" aria-hidden="true"></i>Aujourd’hui
+      </button>
+      <button type="button" class="tab" role="tab" id="tab-historique" aria-selected="false" aria-controls="panel-historique">
+        <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>Historique
+      </button>
+      <button type="button" class="tab" role="tab" id="tab-recap-jour" aria-selected="false" aria-controls="panel-recap-jour">
+        <i class="fa-solid fa-list-check" aria-hidden="true"></i>Totaux par jour
+      </button>
+      <button type="button" class="tab" role="tab" id="tab-graphiques" aria-selected="false" aria-controls="panel-graphiques">
+        <i class="fa-solid fa-chart-line" aria-hidden="true"></i>Graphiques
+      </button>
+      <button type="button" class="tab" role="tab" id="tab-sync" aria-selected="false" aria-controls="panel-sync">
+        <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>Partage
+      </button>
     </div>
 
     <section id="panel-aujourdhui" class="panel active" role="tabpanel" aria-labelledby="tab-aujourdhui">
@@ -1559,6 +1655,23 @@
 
       <div class="card">
         <h2>Totaux du jour <span class="badge" id="badge-date"></span></h2>
+        <div class="stat-chips" aria-label="Résumé du jour">
+          <div class="chip chip--tirage" id="chip-nb-tirage">
+            <i class="fa-solid fa-hand-holding-droplet" aria-hidden="true"></i>
+            <span class="chip-label">Tirages</span>
+            <span class="chip-value" id="chip-val-nb-tirage">0</span>
+          </div>
+          <div class="chip chip--biberon" id="chip-nb-biberon">
+            <i class="fa-solid fa-bottle-droplet" aria-hidden="true"></i>
+            <span class="chip-label">Biberons</span>
+            <span class="chip-value" id="chip-val-nb-biberon">0</span>
+          </div>
+          <div class="chip chip--last" id="chip-last">
+            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+            <span class="chip-label">Dernière</span>
+            <span class="chip-value" id="chip-val-last">—</span>
+          </div>
+        </div>
         <div class="totaux">
           <div class="total-box tirage">
             <span>Tirage cumulé</span>
@@ -2266,10 +2379,16 @@
 
         let sumT = 0;
         let sumB = 0;
+        let nbT = 0;
+        let nbB = 0;
+        let lastTime = "";
 
         list.forEach((e) => {
           sumT += Number(e.tirage) || 0;
           sumB += Number(e.biberon) || 0;
+          if ((Number(e.tirage) || 0) > 0) nbT++;
+          if ((Number(e.biberon) || 0) > 0) nbB++;
+          if (e.time) lastTime = e.time;
 
           const tr = document.createElement("tr");
           tr.dataset.entryId = e.id;
@@ -2291,6 +2410,29 @@
         totalTirage.textContent = sumT + " ml";
         totalBiberon.textContent = sumB + " ml";
         emptyAujourdhui.hidden = list.length > 0;
+
+        const elNbT = document.getElementById("chip-val-nb-tirage");
+        const elNbB = document.getElementById("chip-val-nb-biberon");
+        const elLast = document.getElementById("chip-val-last");
+        if (elNbT) elNbT.textContent = String(nbT);
+        if (elNbB) elNbB.textContent = String(nbB);
+        if (elLast) elLast.textContent = lastTime || "—";
+        if (highlightEntryId) {
+          ["chip-nb-tirage", "chip-nb-biberon", "chip-last"].forEach(function (id) {
+            const chip = document.getElementById(id);
+            if (!chip) return;
+            chip.classList.remove("chip-pop");
+            void chip.offsetWidth;
+            chip.classList.add("chip-pop");
+            chip.addEventListener(
+              "animationend",
+              function () {
+                chip.classList.remove("chip-pop");
+              },
+              { once: true }
+            );
+          });
+        }
 
         tbodyAujourdhui.querySelectorAll("[data-edit]").forEach((btn) => {
           btn.addEventListener("click", () => openEdit(btn.getAttribute("data-edit")));
