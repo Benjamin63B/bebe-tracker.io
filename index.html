@@ -718,6 +718,193 @@
       letter-spacing: -0.02em;
     }
 
+    .bottle-meter {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      gap: 0.45rem;
+      min-height: 84px;
+    }
+
+    .bottle-shell {
+      --fill: 0%;
+      --goal-line: 71.4%;
+      width: 48px;
+      height: 72px;
+      border-radius: 16px 16px 14px 14px;
+      border: 2px solid rgba(26, 159, 212, 0.58);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)),
+        repeating-linear-gradient(
+          180deg,
+          transparent 0,
+          transparent 8px,
+          rgba(26, 159, 212, 0.08) 8px,
+          rgba(26, 159, 212, 0.08) 9px
+        );
+      position: relative;
+      overflow: visible;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -10px 22px rgba(26, 159, 212, 0.06);
+    }
+
+    .bottle-shell .bottle-goal-line {
+      position: absolute;
+      left: -2px;
+      right: -2px;
+      bottom: var(--goal-line);
+      border-top: 2px dashed rgba(242, 181, 212, 0.92);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .bottle-shell::before {
+      content: "";
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      width: 24px;
+      height: 20px;
+      transform: translateX(-50%);
+      border-radius: 9px 9px 11px 11px;
+      border: 2px solid rgba(26, 159, 212, 0.58);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 6px 10px rgba(47, 90, 102, 0.08);
+    }
+
+    .bottle-nipple {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      width: 16px;
+      height: 22px;
+      transform: translateX(-50%);
+      border-radius: 10px 10px 12px 12px;
+      background: linear-gradient(180deg, rgba(242, 181, 212, 0.95), rgba(247, 214, 224, 0.85));
+      border: 2px solid rgba(196, 92, 106, 0.25);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.75),
+        0 6px 10px rgba(47, 90, 102, 0.08);
+      z-index: 2;
+    }
+
+    .bottle-nipple::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 3px;
+      width: 8px;
+      height: 6px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.55);
+      opacity: 0.9;
+    }
+
+    .bottle-nipple::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      width: 24px;
+      height: 10px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.55);
+      border: 2px solid rgba(26, 159, 212, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .bottle-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.7), transparent 40%),
+        radial-gradient(circle at 32% 18%, rgba(255, 255, 255, 0.9), transparent 55%),
+        radial-gradient(circle at 70% 45%, rgba(123, 223, 242, 0.12), transparent 55%);
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    .bottle-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--fill);
+      background: linear-gradient(180deg, rgba(178, 247, 239, 0.75), rgba(123, 223, 242, 0.72), rgba(26, 159, 212, 0.58));
+      transition: height 0.8s cubic-bezier(0.34, 1.25, 0.64, 1);
+      border-top: 1px solid rgba(255, 255, 255, 0.45);
+      transform-origin: bottom;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+    }
+
+    .bottle-fill::before {
+      content: "";
+      position: absolute;
+      left: -30%;
+      right: -30%;
+      top: -10px;
+      height: 18px;
+      background:
+        radial-gradient(circle at 10% 70%, rgba(255, 255, 255, 0.45), transparent 55%),
+        radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.32), transparent 60%),
+        radial-gradient(circle at 65% 55%, rgba(255, 255, 255, 0.28), transparent 60%),
+        radial-gradient(circle at 90% 40%, rgba(255, 255, 255, 0.35), transparent 60%);
+      opacity: 0.85;
+      filter: blur(0.2px);
+      transform: translateX(-8%);
+      animation: waveDrift 2.8s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes waveDrift {
+      from { transform: translateX(-10%); }
+      to { transform: translateX(10%); }
+    }
+
+    .bottle-shell.bottle-animate .bottle-fill {
+      animation: bottleSlosh 0.75s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+
+    .bottle-shell.bottle-animate .bottle-fill::before {
+      animation-duration: 1.35s;
+    }
+
+    .bottle-shell.bottle-reached {
+      box-shadow:
+        0 0 0 3px rgba(29, 176, 160, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -10px 22px rgba(26, 159, 212, 0.08);
+    }
+
+    @keyframes bottleSlosh {
+      0% { filter: saturate(1); transform: scaleY(1); }
+      35% { filter: saturate(1.15); transform: scaleY(1.02); }
+      100% { filter: saturate(1); transform: scaleY(1); }
+    }
+
+    .bottle-caption {
+      font-size: 0.72rem;
+      line-height: 1.2;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: right;
+      min-width: 8.7rem;
+    }
+
+    .bottle-caption strong {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
     .table-scroll {
       overflow-x: auto;
       margin: 0 -0.15rem;
@@ -1583,6 +1770,12 @@
         animation: none !important;
       }
 
+      .bottle-fill,
+      .bottle-fill::before {
+        animation: none !important;
+        transition: none !important;
+      }
+
       .card:hover,
       .tab:hover,
       button.primary:hover,
@@ -1791,6 +1984,14 @@
           <div class="total-box biberon">
             <span>Biberon cumulé</span>
             <strong id="total-biberon">0 ml</strong>
+            <div class="bottle-meter" aria-hidden="true" title="Biberon (animation)">
+              <div class="bottle-shell">
+                <div class="bottle-nipple"></div>
+                <div class="bottle-goal-line"></div>
+                <div class="bottle-fill" id="bottle-fill"></div>
+              </div>
+              <div class="bottle-caption" id="bottle-caption">Objectif <strong>500 ml</strong> · reste <strong>500 ml</strong></div>
+            </div>
           </div>
         </div>
 
@@ -2458,6 +2659,8 @@
       const badgeDate = document.getElementById("badge-date");
       const totalTirage = document.getElementById("total-tirage");
       const totalBiberon = document.getElementById("total-biberon");
+      const bottleFill = document.getElementById("bottle-fill");
+      const bottleCaption = document.getElementById("bottle-caption");
       const historyContainer = document.getElementById("history-container");
       const emptyHistorique = document.getElementById("empty-historique");
       const inputNameBiberon = document.getElementById("name-biberon");
@@ -2630,6 +2833,36 @@
 
         totalTirage.textContent = sumT + " ml";
         totalBiberon.textContent = sumB + " ml";
+        if (bottleFill) {
+          const GOAL_ML = 500;
+          const VISUAL_MAX_ML = 700;
+          const pct = Math.max(0, Math.min(100, Math.round((sumB / VISUAL_MAX_ML) * 100)));
+          const goalPct = Math.max(0, Math.min(100, (GOAL_ML / VISUAL_MAX_ML) * 100));
+          const shell = bottleFill.parentElement;
+          shell.style.setProperty("--fill", pct + "%");
+          shell.style.setProperty("--goal-line", goalPct + "%");
+          const remaining = Math.max(0, GOAL_ML - sumB);
+          const ratio = Math.round((Math.min(sumB, GOAL_ML) / GOAL_ML) * 100);
+          if (bottleCaption) {
+            bottleCaption.innerHTML = "Objectif <strong>500 ml</strong> · " +
+              (remaining > 0
+                ? "reste <strong>" + remaining + " ml</strong> (" + ratio + "%)"
+                : "atteint <strong>" + ratio + "%</strong>");
+          }
+          shell.classList.toggle("bottle-reached", sumB >= GOAL_ML);
+          if (highlightEntryId) {
+            shell.classList.remove("bottle-animate");
+            void shell.offsetWidth;
+            shell.classList.add("bottle-animate");
+            shell.addEventListener(
+              "animationend",
+              function () {
+                shell.classList.remove("bottle-animate");
+              },
+              { once: true }
+            );
+          }
+        }
         emptyAujourdhui.hidden = list.length > 0;
 
         const elNbT = document.getElementById("chip-val-nb-tirage");
