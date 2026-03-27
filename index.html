@@ -2551,6 +2551,7 @@
       const SYNC_ENABLED_KEY = "poupette_sync_enabled_v1";
       const REMINDER_SETTINGS_KEY = "poupette_tirage_reminders_v1";
       const REMINDER_HISTORY_KEY = "poupette_tirage_reminder_history_v1";
+      const REMINDER_PERMISSION_PROMPT_KEY = "poupette_reminder_perm_prompt_v1";
       const FIXED_REMINDER_TIMES = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"];
 
       let firebaseDb = null;
@@ -3206,7 +3207,15 @@
       function showMobileNotification(title, body) {
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           try {
-            new Notification(title, { body: body || "", icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='18' y='8' width='28' height='50' rx='10' fill='%23F2B5D4'/%3E%3Crect x='22' y='20' width='20' height='34' rx='8' fill='%237BDFF2'/%3E%3C/svg%3E" });
+            new Notification(title, {
+              body: body || "",
+              tag: "poupette-rappel",
+              renotify: true,
+              requireInteraction: true,
+              silent: false,
+              vibrate: [280, 120, 280, 120, 420],
+              icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='18' y='8' width='28' height='50' rx='10' fill='%23F2B5D4'/%3E%3Crect x='22' y='20' width='20' height='34' rx='8' fill='%237BDFF2'/%3E%3C/svg%3E"
+            });
           } catch (_e) {}
         }
       }
@@ -3248,6 +3257,26 @@
           else setReminderStatus("Notifications non autorisées.");
           return perm;
         });
+      }
+
+      function isLikelyMobile() {
+        try {
+          const ua = (navigator.userAgent || "").toLowerCase();
+          return /android|iphone|ipad|ipod|mobile/i.test(ua) || (window.matchMedia && window.matchMedia("(max-width: 900px)").matches);
+        } catch {
+          return false;
+        }
+      }
+
+      function maybePromptNotificationOnMobile() {
+        if (typeof Notification === "undefined") return;
+        if (Notification.permission !== "default") return;
+        if (!isLikelyMobile()) return;
+        const today = todayISODate();
+        const last = localStorage.getItem(REMINDER_PERMISSION_PROMPT_KEY) || "";
+        if (last === today) return;
+        localStorage.setItem(REMINDER_PERMISSION_PROMPT_KEY, today);
+        requestReminderPermission();
       }
 
       function nextReminderDate(now, intervalHours, minute) {
@@ -4499,6 +4528,7 @@
             renderReminderFixedTimes();
             renderReminderHistory();
             syncReminderUI();
+            maybePromptNotificationOnMobile();
             scheduleTirageReminders();
           }
           if (id === "sync") {
@@ -4708,6 +4738,7 @@
         renderDailyRecap();
         populateSyncUI();
         syncReminderUI();
+        maybePromptNotificationOnMobile();
         scheduleTirageReminders();
         initFirebaseSync();
       }
