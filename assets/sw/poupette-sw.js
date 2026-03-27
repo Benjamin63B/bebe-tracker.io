@@ -13,7 +13,7 @@ self.addEventListener("notificationclick", function (event) {
       if (clients && clients.length) {
         return clients[0].focus();
       }
-      return self.clients.openWindow("./");
+      return self.clients.openWindow("/");
     })
   );
 });
