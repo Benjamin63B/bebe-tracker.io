@@ -15,8 +15,8 @@
 <body>
   <div id="lock-screen" class="lock-screen" role="dialog" aria-modal="true" aria-labelledby="lock-title">
     <div class="lock-card">
-      <h1 id="lock-title">�Y"' Accès protégé</h1>
-      <p class="sub">Récap tirage & biberon �?" saisissez le mot de passe pour continuer.</p>
+      <h1 id="lock-title">🔒 Accès protégé</h1>
+      <p class="sub">Récap tirage & biberon - saisissez le mot de passe pour continuer.</p>
 
       <p id="lock-error" class="lock-error" role="alert" hidden></p>
 
@@ -105,12 +105,12 @@
   <div class="wrap">
     <header>
       <h1>Récapitulatif tirage & biberon</h1>
-      <p>Suivi quotidien �?" modifier, supprimer, tout est conservé dans l�?Thistorique.</p>
+      <p>Suivi quotidien - modifier, supprimer, tout est conservé dans l'historique.</p>
     </header>
 
     <div class="tabs tabs-sticky" role="tablist">
       <button type="button" class="tab" role="tab" id="tab-aujourdhui" aria-selected="true" aria-controls="panel-aujourdhui">
-        <i class="fa-solid fa-calendar-day" aria-hidden="true"></i>Aujourd�?Thui
+        <i class="fa-solid fa-calendar-day" aria-hidden="true"></i>Aujourd'hui
       </button>
       <button type="button" class="tab" role="tab" id="tab-croissance" aria-selected="false" aria-controls="panel-croissance">
         <i class="fa-solid fa-baby" aria-hidden="true"></i>Croissance
@@ -150,14 +150,14 @@
           </div>
           <div class="form-volumes-split">
             <div class="field-block field-block--tirage">
-              <div class="field-block-head">�Y�� Tirage (tire-lait)</div>
-              <p class="field-block-hint" id="hint-add-tirage">Volume de <strong>lait exprimé</strong> avec le tire-lait �?" pas le biberon.</p>
+              <div class="field-block-head">🤱 Tirage (tire-lait)</div>
+              <p class="field-block-hint" id="hint-add-tirage">Volume de <strong>lait exprimé</strong> avec le tire-lait - pas le biberon.</p>
               <label for="add-tirage">Millilitres tirés</label>
               <input type="number" id="add-tirage" name="tirage" min="0" step="1" placeholder="0" value="" inputmode="numeric" aria-describedby="hint-add-tirage" />
               <div class="volume-shortcuts" data-volume-for="add-tirage" role="group" aria-label="Choisir le volume en millilitres (tirage)"></div>
             </div>
             <div class="field-block field-block--biberon">
-              <div class="field-block-head">�Y�� Biberon</div>
+              <div class="field-block-head">🍼 Biberon</div>
               <p class="field-block-hint" id="hint-add-biberon">Volume de <strong>lait bu</strong> au biberon par le bébé.</p>
               <label for="add-biberon">Millilitres au biberon</label>
               <input type="number" id="add-biberon" name="biberon" min="0" step="1" placeholder="0" value="" inputmode="numeric" aria-describedby="hint-add-biberon" />
@@ -166,7 +166,7 @@
           </div>
           <div class="form-note-wrap">
             <label for="add-note">Note (facultatif)</label>
-            <input type="text" id="add-note" placeholder="Ex. côté gauche, après la sieste�?�" maxlength="120" />
+            <input type="text" id="add-note" placeholder="Ex. côté gauche, après la sieste..." maxlength="120" />
           </div>
         </form>
         <div class="btn-row">
@@ -190,18 +190,18 @@
           </div>
           <div class="chip chip--tirage" id="chip-delta-tirage">
             <i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i>
-            <span class="chip-label">�?cart tirage</span>
-            <span class="chip-value" id="chip-val-delta-tirage">�?"</span>
+            <span class="chip-label">Écart tirage</span>
+            <span class="chip-value" id="chip-val-delta-tirage">—</span>
           </div>
           <div class="chip chip--biberon" id="chip-delta-biberon">
             <i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i>
-            <span class="chip-label">�?cart biberon</span>
-            <span class="chip-value" id="chip-val-delta-biberon">�?"</span>
+            <span class="chip-label">Écart biberon</span>
+            <span class="chip-value" id="chip-val-delta-biberon">—</span>
           </div>
           <div class="chip chip--last" id="chip-last">
             <i class="fa-regular fa-clock" aria-hidden="true"></i>
             <span class="chip-label">Dernière</span>
-            <span class="chip-value" id="chip-val-last">�?"</span>
+            <span class="chip-value" id="chip-val-last">—</span>
           </div>
         </div>
         <div class="totaux">
@@ -228,8 +228,8 @@
             <thead>
               <tr>
                 <th>Heure</th>
-                <th class="col-tirage">�Y�� Tirage</th>
-                <th class="col-biberon">�Y�� Biberon</th>
+                <th class="col-tirage">🤱 Tirage</th>
+                <th class="col-biberon">🍼 Biberon</th>
                 <th>Note</th>
                 <th></th>
               </tr>
@@ -267,18 +267,18 @@
         <div class="growth-stats" aria-live="polite">
           <div class="chip chip--last">
             <i class="fa-solid fa-calendar-week" aria-hidden="true"></i>
-            <span class="chip-label">�,ge exact</span>
-            <span class="chip-value" id="baby-age-exact">�?"</span>
+            <span class="chip-label">Âge exact</span>
+            <span class="chip-value" id="baby-age-exact">—</span>
           </div>
           <div class="chip chip--tirage">
             <i class="fa-solid fa-weight-scale" aria-hidden="true"></i>
             <span class="chip-label">Poids</span>
-            <span class="chip-value" id="baby-weight-display">�?"</span>
+            <span class="chip-value" id="baby-weight-display">—</span>
           </div>
           <div class="chip chip--biberon">
             <i class="fa-solid fa-ruler-vertical" aria-hidden="true"></i>
             <span class="chip-label">Taille</span>
-            <span class="chip-value" id="baby-size-display">�?"</span>
+            <span class="chip-value" id="baby-size-display">—</span>
           </div>
         </div>
       </div>
@@ -299,7 +299,7 @@
           </div>
         </div>
         <div class="btn-row growth-entry-actions">
-          <button type="button" class="primary" id="btn-growth-add">Ajouter l�?Tentrée</button>
+          <button type="button" class="primary" id="btn-growth-add">Ajouter l'entrée</button>
         </div>
         <div class="table-scroll growth-table-wrap">
           <table>
@@ -350,11 +350,11 @@
           Deux listes comme votre suivi : biberons et tirages, du plus ancien au plus récent. Modifier ou supprimer agit sur la ligne complète (même horaire).
         </p>
         <div class="names-row" aria-label="Prénoms affichés dans les titres">
-          <label>�Y�� Prénom biberons <input type="text" id="name-biberon" maxlength="40" autocomplete="given-name" /></label>
-          <label>�Y�� Prénom tirages <input type="text" id="name-tirage" maxlength="40" autocomplete="given-name" /></label>
+          <label>🍼 Prénom biberons <input type="text" id="name-biberon" maxlength="40" autocomplete="given-name" /></label>
+          <label>🤱 Prénom tirages <input type="text" id="name-tirage" maxlength="40" autocomplete="given-name" /></label>
         </div>
         <div class="btn-row mb-1">
-          <button type="button" class="primary" id="btn-load-demo">Charger la démo (maquette 23�?"25 mars)</button>
+          <button type="button" class="primary" id="btn-load-demo">Charger la démo (maquette 23-25 mars)</button>
           <button type="button" class="ghost danger" id="btn-clear-all">Tout effacer (données locales)</button>
         </div>
         <div id="history-container"></div>
@@ -373,9 +373,9 @@
             <thead>
               <tr>
                 <th>Date</th>
-                <th class="col-tirage">�Y�� Nb de tirages</th>
+                <th class="col-tirage">🤱 Nb de tirages</th>
                 <th class="col-tirage">Volume tirage</th>
-                <th class="col-biberon">�Y�� Nb de biberons</th>
+                <th class="col-biberon">🍼 Nb de biberons</th>
                 <th class="col-biberon">Volume biberon</th>
               </tr>
             </thead>
@@ -392,7 +392,7 @@
         <p class="lead">
           Courbes des <strong>volumes (ml)</strong> et du <strong>nombre de prises</strong> par jour (ou par semaine, semaine commençant le lundi).
         </p>
-        <div class="chart-mode-bar" role="group" aria-label="�?chelle du graphique">
+        <div class="chart-mode-bar" role="group" aria-label="Échelle du graphique">
           <button type="button" id="chart-mode-day" aria-pressed="true">Par jour</button>
           <button type="button" id="chart-mode-week" aria-pressed="false">Par semaine</button>
         </div>
@@ -438,7 +438,7 @@
         </p>
         <div class="btn-row">
           <button type="button" class="primary" id="btn-export-json">Exporter JSON</button>
-          <button type="button" class="ghost" id="btn-import-json">Importer un fichier�?�</button>
+          <button type="button" class="ghost" id="btn-import-json">Importer un fichier...</button>
         </div>
         <input type="file" id="import-json-file" accept=".json,application/json" hidden />
       </div>
@@ -460,7 +460,7 @@
             <input type="number" id="reminder-interval-hours" min="1" max="12" step="1" inputmode="numeric" />
           </div>
           <div>
-            <label for="reminder-minute">Minute dans l�?Theure</label>
+            <label for="reminder-minute">Minute dans l'heure</label>
             <input type="number" id="reminder-minute" min="0" max="59" step="1" inputmode="numeric" />
           </div>
           <div>
@@ -477,7 +477,7 @@
         <p id="reminder-status" class="sync-status-line" aria-live="polite"></p>
         <h3 class="chart-section-title">Historique des rappels</h3>
         <div class="btn-row mb-075">
-          <button type="button" class="ghost" id="btn-reminder-history-clear">Vider l�?Thistorique</button>
+          <button type="button" class="ghost" id="btn-reminder-history-clear">Vider l'historique</button>
         </div>
         <div class="reminder-history" id="reminder-history">
           <ul id="reminder-history-list"></ul>
@@ -486,7 +486,7 @@
     </section>
 
     <footer>
-      Données enregistrées dans ce navigateur (stockage local). Pensez à une sauvegarde si vous changez d�?Tappareil.
+      Données enregistrées dans ce navigateur (stockage local). Pensez à une sauvegarde si vous changez d'appareil.
       <div class="footer-actions">
         <button type="button" class="ghost" id="btn-change-password">Changer le mot de passe</button>
         <button type="button" class="ghost" id="btn-lock-session">Verrouiller</button>
@@ -525,7 +525,7 @@
 
   <div class="modal-overlay" id="modal-edit" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-edit-title">
-      <h3 id="modal-edit-title">Modifier l�?Tentrée</h3>
+      <h3 id="modal-edit-title">Modifier l'entrée</h3>
       <form id="form-edit">
         <input type="hidden" id="edit-id" />
         <div class="form-when">
@@ -541,14 +541,14 @@
         </div>
         <div class="form-volumes-split">
           <div class="field-block field-block--tirage">
-            <div class="field-block-head">�Y�� Tirage (tire-lait)</div>
+            <div class="field-block-head">🤱 Tirage (tire-lait)</div>
             <p class="field-block-hint" id="hint-edit-tirage">Lait exprimé au tire-lait (ml).</p>
             <label for="edit-tirage">Millilitres tirés</label>
             <input type="number" id="edit-tirage" min="0" step="1" inputmode="numeric" aria-describedby="hint-edit-tirage" />
             <div class="volume-shortcuts" data-volume-for="edit-tirage" role="group" aria-label="Choisir le volume en millilitres (tirage)"></div>
           </div>
           <div class="field-block field-block--biberon">
-            <div class="field-block-head">�Y�� Biberon</div>
+            <div class="field-block-head">🍼 Biberon</div>
             <p class="field-block-hint" id="hint-edit-biberon">Lait bu au biberon (ml).</p>
             <label for="edit-biberon">Millilitres au biberon</label>
             <input type="number" id="edit-biberon" min="0" step="1" inputmode="numeric" aria-describedby="hint-edit-biberon" />

@@ -1,10 +1,10 @@
 (function () {
       /**
        * Synchro temps réel : créez un projet sur https://console.firebase.google.com
-       * �?' Realtime Database �?' créer la base �?' Règles (test) : .read/.write true sur "rooms"
-       * �?' Paramètres du projet �?' Votre appli �?' config Web �?' copiez apiKey, authDomain, databaseURL, projectId
+       * -> Realtime Database -> créer la base -> Règles (test) : .read/.write true sur "rooms"
+       * -> Paramètres du projet -> Votre appli -> config Web -> copiez apiKey, authDomain, databaseURL, projectId
        */
-      /** Si la synchro échoue : Firebase �?' Realtime Database �?' copier l�?TURL exacte dans databaseURL ci-dessous. */
+      /** Si la synchro échoue : Firebase -> Realtime Database -> copier l'URL exacte dans databaseURL ci-dessous. */
       const FIREBASE_CONFIG = {
         apiKey: "AIzaSyDP1_68KcSqNAfKx8ObwkYbw_KmVLwaVAU",
         authDomain: "eleonore-617ce.firebaseapp.com",
@@ -362,7 +362,7 @@
           },
           function (err) {
             if (err) {
-              setSyncStatusText("Erreur d�?Tenvoi : " + (err.message || String(err)));
+              setSyncStatusText("Erreur d'envoi : " + (err.message || String(err)));
             } else {
               setSyncStatusText("Synchronisé · " + new Date().toLocaleTimeString("fr-FR"));
             }
@@ -405,7 +405,7 @@
             firebaseSyncFirstSnapshot = false;
             if (!v || !Array.isArray(v.entries)) {
               pushBundleToCloud();
-              setSyncStatusText("Connexion �?" envoi de vos données locales.");
+              setSyncStatusText("Connexion - envoi de vos données locales.");
               return;
             }
           }
@@ -445,7 +445,7 @@
             applyingRemote = false;
           }
         });
-        setSyncStatusText("�?coute du salon « " + room + " »�?�");
+        setSyncStatusText("Écoute du salon « " + room + " »...");
       }
 
       function loadEntries() {
@@ -526,7 +526,7 @@
         );
       }
 
-      /** Données d�?Texemple identiques à la maquette (biberons �?léonore / tirages Andéole), 23�?"25 mars. */
+      /** Données d'exemple identiques à la maquette (biberons Éléonore / tirages Andéole), 23-25 mars. */
       function buildDemoEntries() {
         const year = new Date().getFullYear();
         function iso(day) {
@@ -563,11 +563,11 @@
         return sortEntriesChrono(out);
       }
 
-      /** Si aucune donnée : insère la démo pour que l�?Thistorique ne soit jamais vide au premier usage. */
+      /** Si aucune donnée : insère la démo pour que l'historique ne soit jamais vide au premier usage. */
       function ensureDemoDataIfEmpty() {
         if (loadEntries().length > 0) return;
         saveEntries(buildDemoEntries());
-        saveNames({ biberon: "�?léonore", tirage: "Andéole" });
+        saveNames({ biberon: "Éléonore", tirage: "Andéole" });
         applyNamesToInputs();
       }
 
@@ -596,7 +596,7 @@
 
       function loadDemoReplace() {
         saveEntries(buildDemoEntries());
-        saveNames({ biberon: "�?léonore", tirage: "Andéole" });
+        saveNames({ biberon: "Éléonore", tirage: "Andéole" });
         applyNamesToInputs();
         try {
           localStorage.removeItem(HISTORY_KEY);
@@ -746,7 +746,7 @@
           const li = document.createElement("li");
           const d = new Date(x.at);
           const hhmm = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-          li.textContent = "[" + hhmm + "] " + (x.kind || "info") + " �?" " + (x.msg || "");
+          li.textContent = "[" + hhmm + "] " + (x.kind || "info") + " - " + (x.msg || "");
           reminderHistoryList.appendChild(li);
         });
       }
@@ -995,10 +995,10 @@
         const rem = days % 7;
         if (babyAgeExact) babyAgeExact.textContent = weeks + " sem + " + rem + " j";
         if (babyWeightDisplay) {
-          babyWeightDisplay.textContent = p.weightKg ? p.weightKg.replace(".", ",") + " kg" : "�?"";
+          babyWeightDisplay.textContent = p.weightKg ? p.weightKg.replace(".", ",") + " kg" : "—";
         }
         if (babySizeDisplay) {
-          babySizeDisplay.textContent = p.sizeCm ? p.sizeCm.replace(".", ",") + " cm" : "�?"";
+          babySizeDisplay.textContent = p.sizeCm ? p.sizeCm.replace(".", ",") + " cm" : "—";
         }
       }
 
@@ -1068,7 +1068,7 @@
           chartGrowthSizeInstance = null;
         }
 
-        const lbl = labels.length ? labels : ["�?""];
+        const lbl = labels.length ? labels : ["—"];
         const w = labels.length ? wData : [0];
         const s = labels.length ? sData : [0];
 
@@ -1109,8 +1109,8 @@
             const tr = document.createElement("tr");
             tr.innerHTML =
               "<td>" + escapeHtml(formatDateLabel(x.date || "")) + "</td>" +
-              "<td>" + (x.weightKg != null ? String(x.weightKg).replace(".", ",") + " kg" : "�?"") + "</td>" +
-              "<td>" + (x.sizeCm != null ? String(x.sizeCm).replace(".", ",") + " cm" : "�?"") + "</td>";
+              "<td>" + (x.weightKg != null ? String(x.weightKg).replace(".", ",") + " kg" : "—") + "</td>" +
+              "<td>" + (x.sizeCm != null ? String(x.sizeCm).replace(".", ",") + " cm" : "—") + "</td>";
             tbody.appendChild(tr);
           });
         }
@@ -1137,14 +1137,14 @@
       function loadNames() {
         try {
           const raw = localStorage.getItem(NAMES_KEY);
-          if (!raw) return { biberon: "�?léonore", tirage: "Andéole" };
+          if (!raw) return { biberon: "Éléonore", tirage: "Andéole" };
           const o = JSON.parse(raw);
           return {
-            biberon: typeof o.biberon === "string" && o.biberon.trim() ? o.biberon.trim() : "�?léonore",
+            biberon: typeof o.biberon === "string" && o.biberon.trim() ? o.biberon.trim() : "Éléonore",
             tirage: typeof o.tirage === "string" && o.tirage.trim() ? o.tirage.trim() : "Andéole"
           };
         } catch {
-          return { biberon: "�?léonore", tirage: "Andéole" };
+          return { biberon: "Éléonore", tirage: "Andéole" };
         }
       }
 
@@ -1222,8 +1222,8 @@
         }
 
         function formatDeltaMinutes(mins) {
-          if (mins == null) return "�?"";
-          if (mins < 0) return "�?"";
+          if (mins == null) return "—";
+          if (mins < 0) return "—";
           const h = Math.floor(mins / 60);
           const m = mins % 60;
           if (h <= 0) return m + " min";
@@ -1269,7 +1269,7 @@
             dot.className = "tl-dot";
             const time = document.createElement("span");
             time.className = "tl-time";
-            time.textContent = e.time || "�?"";
+            time.textContent = e.time || "—";
             const label = document.createElement("span");
             label.className = "tl-label";
             label.textContent = tMl > 0 ? "tirage" : "biberon";
@@ -1280,7 +1280,7 @@
           }
         });
 
-        // Table : plus récent �?' plus ancien (comme avant)
+        // Table : plus récent -> plus ancien (comme avant)
         list.forEach((e) => {
           const tr = document.createElement("tr");
           tr.dataset.entryId = e.id;
@@ -1288,7 +1288,7 @@
             tr.classList.add("tr-row-flash");
           }
           tr.innerHTML =
-            "<td>" + escapeHtml(e.time || "�?"") + "</td>" +
+            "<td>" + escapeHtml(e.time || "—") + "</td>" +
             '<td class="col-tirage">' + (e.tirage || 0) + " ml</td>" +
             '<td class="col-biberon">' + (e.biberon || 0) + " ml</td>" +
             "<td>" + escapeHtml(e.note || "") + "</td>" +
@@ -1340,7 +1340,7 @@
         const elDeltaB = document.getElementById("chip-val-delta-biberon");
         if (elNbT) elNbT.textContent = String(nbT);
         if (elNbB) elNbB.textContent = String(nbB);
-        if (elLast) elLast.textContent = lastTime || "�?"";
+        if (elLast) elLast.textContent = lastTime || "—";
         // list est triée du plus récent au plus ancien : lastXMin = plus récent, prevXMin = juste avant (plus ancien)
         if (elDeltaT) elDeltaT.textContent = formatDeltaMinutes(prevTMin == null || lastTMin == null ? null : lastTMin - prevTMin);
         if (elDeltaB) elDeltaB.textContent = formatDeltaMinutes(prevBMin == null || lastBMin == null ? null : lastBMin - prevBMin);
@@ -1398,7 +1398,7 @@
         return div.innerHTML;
       }
 
-      /** Tri chronologique ancien �?' récent */
+      /** Tri chronologique ancien -> récent */
       function sortEntriesChrono(entries) {
         return [...entries].sort((a, b) => {
           const da = a.date + "T" + (a.time || "00:00");
@@ -1407,12 +1407,12 @@
         });
       }
 
-      /** JJ/MM HH:MM �?" X ml */
+      /** JJ/MM HH:MM -> X ml */
       function formatHistoryBullet(isoDate, time, ml) {
         const parts = isoDate.split("-");
         const ddmm = parts.length === 3 ? parts[2] + "/" + parts[1] : isoDate;
         const hm = time && time.length ? time : "00:00";
-        return ddmm + " " + hm + " �?" " + ml + " ml";
+        return ddmm + " " + hm + " -> " + ml + " ml";
       }
 
       function mondayOfWeek(isoDate) {
@@ -1545,7 +1545,7 @@
         }
 
         if (labels.length === 0) {
-          labels.push("�?"");
+          labels.push("—");
           tirageMl.push(0);
           biberonMl.push(0);
           nbT.push(0);
@@ -1712,7 +1712,7 @@
         colBiberon.className = "history-column biberon-col";
         colBiberon.innerHTML =
           "<h3>Historique biberons</h3>" +
-          "<p class=\"history-sub\">�Y�� Historique biberons �?" " +
+          "<p class=\"history-sub\">🍼 Historique biberons - " +
           escapeHtml(names.biberon) +
           "</p>" +
           "<p class=\"history-count\">Nombre de prises au biberon : <strong>" +
@@ -1725,7 +1725,7 @@
         colTirage.className = "history-column tirage-col";
         colTirage.innerHTML =
           "<h3>Historique tirages</h3>" +
-          "<p class=\"history-sub\">�Y�� Historique tirages �?" " +
+          "<p class=\"history-sub\">🤱 Historique tirages - " +
           escapeHtml(names.tirage) +
           "</p>" +
           "<p class=\"history-count\">Nombre de tirages : <strong>" + nbTirages + "</strong></p>";
@@ -1842,7 +1842,7 @@
           let detail = "";
           if (snap) {
             detail =
-              " �?" " +
+              " -> " +
               (snap.date || "") +
               " " +
               (snap.time || "") +
@@ -2057,7 +2057,7 @@
       document.getElementById("btn-load-demo").addEventListener("click", function () {
         openConfirm(
           "Charger la démo maquette ?",
-          "Vos entrées actuelles seront remplacées par l�?Texemple (23�?"25 mars, biberons + tirages comme sur l�?Timage).",
+          "Vos entrées actuelles seront remplacées par l'exemple (23-25 mars, biberons + tirages comme sur l'image).",
           loadDemoReplace
         );
       });

@@ -89,7 +89,7 @@
       margin-right: auto;
     }
 
-    /* Petites touches �?opremium�?� */
+    /* Petites touches premium */
     ::selection {
       background: rgba(242, 181, 212, 0.55);
       color: var(--text);
@@ -1751,7 +1751,7 @@
       pointer-events: none;
     }
 
-    /* Petit �?osparkle�?� dans le toast OK */
+    /* Petit sparkle dans le toast OK */
     .toast.toast--ok::after {
       content: "";
       position: absolute;
