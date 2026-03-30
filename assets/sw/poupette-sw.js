@@ -13,7 +13,8 @@ self.addEventListener("notificationclick", function (event) {
       if (clients && clients.length) {
         return clients[0].focus();
       }
-      return self.clients.openWindow("/");
+      // Ouvre la racine du projet (GitHub Pages: /<repo>/).
+      return self.clients.openWindow(self.registration.scope);
     })
   );
 });

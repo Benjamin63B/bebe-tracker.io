@@ -41,6 +41,18 @@
       const REMINDER_HISTORY_KEY = "poupette_tirage_reminder_history_v1";
       const REMINDER_PERMISSION_PROMPT_KEY = "poupette_reminder_perm_prompt_v1";
       const FIXED_REMINDER_TIMES = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"];
+      const APP_BASE_PATH = (function () {
+        try {
+          // Ex: https://x.github.io/repo/ -> /repo/
+          // Ex: https://x.github.io/repo/index.html -> /repo/
+          const p = String(location.pathname || "/");
+          if (p.endsWith("/")) return p;
+          const i = p.lastIndexOf("/");
+          return i >= 0 ? p.slice(0, i + 1) : "/";
+        } catch {
+          return "/";
+        }
+      })();
 
       let firebaseDb = null;
       let firebaseSyncRef = null;
@@ -708,7 +720,10 @@
         if (!("serviceWorker" in navigator)) return Promise.resolve(null);
         const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
         if (location.protocol !== "https:" && !isLocal) return Promise.resolve(null);
-        swRegPromise = navigator.serviceWorker.register("./assets/sw/poupette-sw.js").catch(function () {
+        // Important pour GitHub Pages : scope doit être la racine du projet (ex: /bebe-tracker.io/).
+        swRegPromise = navigator.serviceWorker
+          .register(APP_BASE_PATH + "assets/sw/poupette-sw.js", { scope: APP_BASE_PATH })
+          .catch(function () {
           return null;
         });
         return swRegPromise;
@@ -2403,6 +2418,14 @@
         if (!stored) {
           stored = await ensurePasswordHashLoadedFromCloud();
         }
+        if (!stored) {
+          formLockLogin.hidden = true;
+          formLockSetup.hidden = false;
+          lockForgotWrap.hidden = true;
+          setLockError("Aucun mot de passe trouvé. Créez-en un nouveau ci-dessous.");
+          document.getElementById("lock-setup-pw").focus();
+          return;
+        }
         try {
           const h = await hashPassword(pw);
           if (h === stored) {
@@ -2478,7 +2501,8 @@
         const oldPw = document.getElementById("change-pwd-old").value;
         const newPw = document.getElementById("change-pwd-new").value;
         const new2 = document.getElementById("change-pwd-new2").value;
-        const stored = localStorage.getItem(PWD_HASH_KEY);
+        let stored = localStorage.getItem(PWD_HASH_KEY);
+        if (!stored) stored = await ensurePasswordHashLoadedFromCloud();
         if (newPw.length < 4) {
           changePwdErr.textContent = "Le nouveau mot de passe doit faire au moins 4 caractères.";
           changePwdErr.hidden = false;
