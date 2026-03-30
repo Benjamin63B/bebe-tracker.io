@@ -715,6 +715,29 @@
         if (reminderStatus) reminderStatus.textContent = text || "";
       }
 
+      function updateReminderPermissionUI() {
+        const btn = document.getElementById("btn-reminder-permission");
+        if (!btn) return;
+        btn.hidden = false;
+        if (typeof Notification === "undefined") {
+          btn.textContent = "Notifications non supportées";
+          btn.disabled = true;
+          return;
+        }
+        if (Notification.permission === "granted") {
+          btn.textContent = "Notifications activées";
+          btn.disabled = true;
+          return;
+        }
+        if (Notification.permission === "denied") {
+          btn.textContent = "Notifications bloquées (paramètres)";
+          btn.disabled = false;
+          return;
+        }
+        btn.textContent = "Autoriser notifications";
+        btn.disabled = false;
+      }
+
       function ensureServiceWorkerReady() {
         if (swRegPromise) return swRegPromise;
         if (!("serviceWorker" in navigator)) return Promise.resolve(null);
@@ -850,6 +873,7 @@
         return Notification.requestPermission().then(function (perm) {
           if (perm === "granted") setReminderStatus("Notifications autorisées.");
           else setReminderStatus("Notifications non autorisées.");
+          updateReminderPermissionUI();
           return perm;
         });
       }
@@ -941,6 +965,7 @@
         if (reminderIntervalInput) reminderIntervalInput.value = String(s.intervalHours);
         if (reminderMinuteInput) reminderMinuteInput.value = String(s.minute);
         if (reminderTestTimeInput && !reminderTestTimeInput.value) reminderTestTimeInput.value = nowTime();
+        updateReminderPermissionUI();
       }
 
       function persistReminderSettingsFromUI() {
@@ -2170,7 +2195,14 @@
       const btnReminderPermission = document.getElementById("btn-reminder-permission");
       if (btnReminderPermission) {
         btnReminderPermission.addEventListener("click", function () {
-          requestReminderPermission();
+          if (typeof Notification !== "undefined" && Notification.permission === "denied") {
+            showToast("Notifications bloquées : Chrome > cadenas > Notifications > Autoriser.", "error");
+            updateReminderPermissionUI();
+            return;
+          }
+          requestReminderPermission().finally(function () {
+            updateReminderPermissionUI();
+          });
         });
       }
       const btnReminderTestNow = document.getElementById("btn-reminder-test-now");
