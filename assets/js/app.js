@@ -37,30 +37,12 @@
       const PERSISTENT_UNLOCK_KEY = "poupette_rester_connecte_v1";
       const SYNC_ROOM_KEY = "poupette_sync_room_v1";
       const SYNC_ENABLED_KEY = "poupette_sync_enabled_v1";
-      const REMINDER_SETTINGS_KEY = "poupette_tirage_reminders_v1";
-      const REMINDER_HISTORY_KEY = "poupette_tirage_reminder_history_v1";
-      const REMINDER_PERMISSION_PROMPT_KEY = "poupette_reminder_perm_prompt_v1";
-      const FIXED_REMINDER_TIMES = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"];
-      const APP_BASE_PATH = (function () {
-        try {
-          // Ex: https://x.github.io/repo/ -> /repo/
-          // Ex: https://x.github.io/repo/index.html -> /repo/
-          const p = String(location.pathname || "/");
-          if (p.endsWith("/")) return p;
-          const i = p.lastIndexOf("/");
-          return i >= 0 ? p.slice(0, i + 1) : "/";
-        } catch {
-          return "/";
-        }
-      })();
+      // (Rappels / Notifications supprimés)
 
       let firebaseDb = null;
       let firebaseSyncRef = null;
       let applyingRemote = false;
       let cloudPushTimer = null;
-      let reminderTimer = null;
-      let reminderTestTimer = null;
-      let swRegPromise = null;
       let firebaseSyncFirstSnapshot = true;
       let chartMode = "day";
       let chartMlInstance = null;
@@ -155,45 +137,7 @@
         scheduleCloudPush();
       }
 
-      function loadReminderSettings() {
-        const defaults = { enabled: false, intervalHours: 3, minute: 0 };
-        try {
-          const raw = localStorage.getItem(REMINDER_SETTINGS_KEY);
-          if (!raw) return defaults;
-          const x = JSON.parse(raw);
-          return {
-            enabled: !!(x && x.enabled),
-            intervalHours: Math.min(12, Math.max(1, Number((x && x.intervalHours) || 3) || 3)),
-            minute: Math.min(59, Math.max(0, Number((x && x.minute) || 0) || 0))
-          };
-        } catch {
-          return defaults;
-        }
-      }
-
-      function saveReminderSettings(v) {
-        const clean = {
-          enabled: !!(v && v.enabled),
-          intervalHours: Math.min(12, Math.max(1, Number((v && v.intervalHours) || 3) || 3)),
-          minute: Math.min(59, Math.max(0, Number((v && v.minute) || 0) || 0))
-        };
-        localStorage.setItem(REMINDER_SETTINGS_KEY, JSON.stringify(clean));
-      }
-
-      function loadReminderHistory() {
-        try {
-          const raw = localStorage.getItem(REMINDER_HISTORY_KEY);
-          if (!raw) return [];
-          const arr = JSON.parse(raw);
-          return Array.isArray(arr) ? arr : [];
-        } catch {
-          return [];
-        }
-      }
-
-      function saveReminderHistory(items) {
-        localStorage.setItem(REMINDER_HISTORY_KEY, JSON.stringify((items || []).slice(0, 120)));
-      }
+      // (Rappels / Notifications supprimés)
 
       function firebaseConfigured() {
         if (typeof firebase === "undefined") return false;
@@ -367,9 +311,6 @@
             names: loadNames(),
             babyProfile: loadBabyProfile(),
             babyGrowthLog: loadBabyGrowthLog(),
-            reminderSettings: loadReminderSettings(),
-            reminderHistory: loadReminderHistory(),
-            reminderLastSent: getLastSentMap(),
             historyLog: loadHistoryLog(),
             updatedAt: firebase.database.ServerValue.TIMESTAMP
           },
@@ -435,23 +376,9 @@
             if (v.babyGrowthLog && Array.isArray(v.babyGrowthLog)) {
               saveBabyGrowthLog(v.babyGrowthLog);
             }
-            if (v.reminderSettings && typeof v.reminderSettings === "object") {
-              saveReminderSettings(v.reminderSettings);
-            }
-            if (v.reminderHistory && Array.isArray(v.reminderHistory)) {
-              saveReminderHistory(v.reminderHistory);
-            }
-            if (v.reminderLastSent && typeof v.reminderLastSent === "object") {
-              try {
-                localStorage.setItem(REMINDER_LAST_SENT_KEY, JSON.stringify(v.reminderLastSent));
-              } catch (_e) {}
-            }
             applyNamesToInputs();
             renderBabyProfile(true);
             renderGrowthSection();
-            renderReminderHistory();
-            syncReminderUI();
-            scheduleTirageReminders();
             if (v.historyLog && Array.isArray(v.historyLog)) {
               saveHistoryLog(v.historyLog);
             }
@@ -683,13 +610,7 @@
       const growthUnlockForm = document.getElementById("form-growth-unlock");
       const growthUnlockPassword = document.getElementById("growth-unlock-password");
       const growthUnlockError = document.getElementById("growth-unlock-error");
-      const reminderEnabledInput = document.getElementById("reminder-enabled");
-      const reminderIntervalInput = document.getElementById("reminder-interval-hours");
-      const reminderMinuteInput = document.getElementById("reminder-minute");
-      const reminderTestTimeInput = document.getElementById("reminder-test-time");
-      const reminderStatus = document.getElementById("reminder-status");
-      const reminderFixedTimesEl = document.getElementById("reminder-fixed-times");
-      const reminderHistoryList = document.getElementById("reminder-history-list");
+      // (Rappels / Notifications supprimés)
       const historyContainer = document.getElementById("history-container");
       const emptyHistorique = document.getElementById("empty-historique");
       const inputNameBiberon = document.getElementById("name-biberon");
@@ -717,373 +638,7 @@
         setGrowthUnlockError("");
       }
 
-      function setReminderStatus(text) {
-        if (reminderStatus) reminderStatus.textContent = text || "";
-      }
-
-      function updateReminderPermissionUI() {
-        const btn = document.getElementById("btn-reminder-permission");
-        if (!btn) return;
-        btn.hidden = false;
-        if (typeof Notification === "undefined") {
-          btn.textContent = "Notifications non supportées";
-          btn.disabled = true;
-          return;
-        }
-        if (Notification.permission === "granted") {
-          btn.textContent = "Notifications activées";
-          btn.disabled = true;
-          return;
-        }
-        if (Notification.permission === "denied") {
-          btn.textContent = "Notifications bloquées (paramètres)";
-          btn.disabled = false;
-          return;
-        }
-        btn.textContent = "Autoriser notifications";
-        btn.disabled = false;
-      }
-
-      function ensureServiceWorkerReady() {
-        if (swRegPromise) return swRegPromise;
-        if (!("serviceWorker" in navigator)) return Promise.resolve(null);
-        const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-        if (location.protocol !== "https:" && !isLocal) return Promise.resolve(null);
-        // Important pour GitHub Pages : scope doit être la racine du projet (ex: /bebe-tracker.io/).
-        swRegPromise = navigator.serviceWorker
-          .register(APP_BASE_PATH + "assets/sw/poupette-sw.js", { scope: APP_BASE_PATH })
-          .catch(function () {
-          return null;
-        });
-        return swRegPromise;
-      }
-
-      function renderReminderFixedTimes() {
-        if (!reminderFixedTimesEl) return;
-        reminderFixedTimesEl.innerHTML = "";
-        FIXED_REMINDER_TIMES.forEach(function (t) {
-          const s = document.createElement("span");
-          s.className = "reminder-time-chip";
-          s.textContent = t;
-          reminderFixedTimesEl.appendChild(s);
-        });
-      }
-
-      function addReminderHistory(kind, msg) {
-        const hist = loadReminderHistory();
-        hist.unshift({ at: new Date().toISOString(), kind: kind || "info", msg: msg || "" });
-        saveReminderHistory(hist);
-        renderReminderHistory();
-      }
-
-      function renderReminderHistory() {
-        if (!reminderHistoryList) return;
-        const hist = loadReminderHistory();
-        reminderHistoryList.innerHTML = "";
-        if (!hist.length) {
-          const li = document.createElement("li");
-          li.textContent = "Aucun événement de rappel pour le moment.";
-          reminderHistoryList.appendChild(li);
-          return;
-        }
-        hist.forEach(function (x) {
-          const li = document.createElement("li");
-          const d = new Date(x.at);
-          const hhmm = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-          li.textContent = "[" + hhmm + "] " + (x.kind || "info") + " - " + (x.msg || "");
-          reminderHistoryList.appendChild(li);
-        });
-      }
-
-      function showMobileNotification(title, body) {
-        if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-        const optsPrimary = {
-          body: body || "",
-          tag: "poupette-rappel",
-          renotify: true,
-          requireInteraction: true,
-          silent: false,
-          vibrate: [280, 120, 280, 120, 420],
-          icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='18' y='8' width='28' height='50' rx='10' fill='%23F2B5D4'/%3E%3Crect x='22' y='20' width='20' height='34' rx='8' fill='%237BDFF2'/%3E%3C/svg%3E"
-        };
-        const optsWatchCompat = {
-          body: body || "",
-          // Tag unique pour éviter la fusion et améliorer le relais montre.
-          tag: "poupette-watch-" + Date.now(),
-          renotify: true,
-          requireInteraction: false,
-          silent: false,
-          vibrate: [350, 180, 350],
-          icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='18' y='8' width='28' height='50' rx='10' fill='%23F2B5D4'/%3E%3Crect x='22' y='20' width='20' height='34' rx='8' fill='%237BDFF2'/%3E%3C/svg%3E"
-        };
-
-        function emit(reg, t, opts) {
-          if (reg && typeof reg.showNotification === "function") return reg.showNotification(t, opts);
-          return Promise.resolve().then(function () {
-            new Notification(t, opts);
-          });
-        }
-
-        ensureServiceWorkerReady()
-          .then(function (reg) {
-            emit(reg, title, optsPrimary).catch(function () {});
-            // 2e notification courte "compat montre" ~2s après.
-            setTimeout(function () {
-              emit(reg, "Rappel tirage (montre)", optsWatchCompat).catch(function () {});
-            }, 1900);
-          })
-          .catch(function () {
-            try {
-              new Notification(title, optsPrimary);
-              setTimeout(function () {
-                try {
-                  new Notification("Rappel tirage (montre)", optsWatchCompat);
-                } catch (_e2) {}
-              }, 1900);
-            } catch (_e) {}
-          });
-      }
-
-      function playReminderRingtone() {
-        try {
-          const Ctx = window.AudioContext || window.webkitAudioContext;
-          if (!Ctx) return;
-          const ctx = new Ctx();
-          const notes = [880, 988, 1175, 988, 880];
-          let t = ctx.currentTime + 0.02;
-          notes.forEach(function (freq) {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = "sine";
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.0001, t);
-            gain.gain.exponentialRampToValueAtTime(0.12, t + 0.03);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(t);
-            osc.stop(t + 0.24);
-            t += 0.18;
-          });
-          setTimeout(function () {
-            try { ctx.close(); } catch (_e) {}
-          }, 1400);
-        } catch (_e) {}
-      }
-
-      function requestReminderPermission() {
-        if (typeof Notification === "undefined") {
-          setReminderStatus("Notifications non supportées sur ce navigateur.");
-          return Promise.resolve("denied");
-        }
-        return Notification.requestPermission().then(function (perm) {
-          if (perm === "granted") setReminderStatus("Notifications autorisées.");
-          else setReminderStatus("Notifications non autorisées.");
-          updateReminderPermissionUI();
-          return perm;
-        });
-      }
-
-      function isLikelyMobile() {
-        try {
-          const ua = (navigator.userAgent || "").toLowerCase();
-          return /android|iphone|ipad|ipod|mobile/i.test(ua) || (window.matchMedia && window.matchMedia("(max-width: 900px)").matches);
-        } catch {
-          return false;
-        }
-      }
-
-      function maybePromptNotificationOnMobile() {
-        if (typeof Notification === "undefined") return;
-        if (Notification.permission !== "default") return;
-        if (!isLikelyMobile()) return;
-        const today = todayISODate();
-        const last = localStorage.getItem(REMINDER_PERMISSION_PROMPT_KEY) || "";
-        if (last === today) return;
-        localStorage.setItem(REMINDER_PERMISSION_PROMPT_KEY, today);
-        requestReminderPermission();
-      }
-
-      function nextReminderDate(now, intervalHours, minute) {
-        const stepMin = Math.max(1, intervalHours) * 60;
-        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
-        for (let i = 0; i < Math.ceil((48 * 60) / stepMin) + 5; i++) {
-          const t = new Date(start + i * stepMin * 60000 + minute * 60000);
-          if (t.getTime() > now.getTime() + 1000) return t;
-        }
-        return new Date(now.getTime() + stepMin * 60000);
-      }
-
-      function nextReminderDateFromFixedTimes(now) {
-        const items = FIXED_REMINDER_TIMES.map(function (t) {
-          const p = String(t).split(":").map(Number);
-          return { h: p[0] || 0, m: p[1] || 0, label: t };
-        });
-        for (let i = 0; i < items.length; i++) {
-          const d = new Date(now);
-          d.setHours(items[i].h, items[i].m, 0, 0);
-          if (d.getTime() > now.getTime() + 1000) return d;
-        }
-        const first = items[0];
-        const d2 = new Date(now);
-        d2.setDate(d2.getDate() + 1);
-        d2.setHours(first.h, first.m, 0, 0);
-        return d2;
-      }
-
-      function clearReminderTimers() {
-        if (reminderTimer) {
-          clearInterval(reminderTimer);
-          reminderTimer = null;
-        }
-        if (reminderTestTimer) {
-          clearTimeout(reminderTestTimer);
-          reminderTestTimer = null;
-        }
-      }
-
-      const REMINDER_LAST_SENT_KEY = "poupette_tirage_reminder_last_sent_v1";
-
-      function two(n) {
-        return String(n).padStart(2, "0");
-      }
-
-      function hhmm(d) {
-        return two(d.getHours()) + ":" + two(d.getMinutes());
-      }
-
-      function getLastSentMap() {
-        try {
-          const raw = localStorage.getItem(REMINDER_LAST_SENT_KEY);
-          if (!raw) return {};
-          const x = JSON.parse(raw);
-          return x && typeof x === "object" ? x : {};
-        } catch {
-          return {};
-        }
-      }
-
-      function setLastSent(dateIso, timeStr) {
-        const m = getLastSentMap();
-        m[String(dateIso)] = String(timeStr);
-        try {
-          localStorage.setItem(REMINDER_LAST_SENT_KEY, JSON.stringify(m));
-        } catch (_e) {}
-      }
-
-      function alreadySentToday(dateIso, timeStr) {
-        const m = getLastSentMap();
-        return m && m[String(dateIso)] === String(timeStr);
-      }
-
-      function computeNextFixedTimeLabel(now) {
-        const next = nextReminderDateFromFixedTimes(now);
-        return next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      }
-
-      function maybeFireFixedReminder(now) {
-        const s = loadReminderSettings();
-        if (!s.enabled) return;
-        const t = hhmm(now);
-        if (FIXED_REMINDER_TIMES.indexOf(t) === -1) return;
-        const dateIso = todayISODate();
-        // Fenêtre courte pour éviter de rater le minuteur et éviter les doubles.
-        if (now.getSeconds() > 20) return;
-        if (alreadySentToday(dateIso, t)) return;
-        setLastSent(dateIso, t);
-        showMobileNotification("Rappel tirage", "Pensez au prochain tirage (" + t + ").");
-        playReminderRingtone();
-        showToast("Rappel tirage (" + t + ")", "ok");
-        addReminderHistory("envoyé", "Notification envoyée à " + t + ".");
-      }
-
-      function scheduleTirageReminders() {
-        try {
-          if (reminderTimer) {
-            clearInterval(reminderTimer);
-            reminderTimer = null;
-          }
-          const s = loadReminderSettings();
-          if (!s.enabled) {
-            setReminderStatus("Rappels désactivés.");
-            return;
-          }
-          const now = new Date();
-          setReminderStatus("Rappels activés · prochain à " + computeNextFixedTimeLabel(now) + ".");
-          addReminderHistory("planifié", "Rappels actifs (heures fixes).");
-
-          // Mode robuste Android : polling léger (évite les timeouts “endormis”).
-          reminderTimer = setInterval(function () {
-            const cur = new Date();
-            // Met à jour de temps en temps le statut
-            if (cur.getSeconds() === 0) {
-              setReminderStatus("Rappels activés · prochain à " + computeNextFixedTimeLabel(cur) + ".");
-            }
-            maybeFireFixedReminder(cur);
-          }, 1000);
-        } catch (err) {
-          setReminderStatus("Erreur planification: " + (err && err.message ? err.message : String(err)));
-        }
-      }
-
-      function syncReminderUI() {
-        const s = loadReminderSettings();
-        if (reminderEnabledInput) reminderEnabledInput.checked = !!s.enabled;
-        if (reminderIntervalInput) reminderIntervalInput.value = String(s.intervalHours);
-        if (reminderMinuteInput) reminderMinuteInput.value = String(s.minute);
-        if (reminderTestTimeInput && !reminderTestTimeInput.value) reminderTestTimeInput.value = nowTime();
-        updateReminderPermissionUI();
-      }
-
-      function persistReminderSettingsFromUI() {
-        try {
-          const current = loadReminderSettings();
-          const next = {
-            enabled: reminderEnabledInput ? reminderEnabledInput.checked : current.enabled,
-            intervalHours: reminderIntervalInput
-              ? Number(reminderIntervalInput.value || current.intervalHours)
-              : current.intervalHours,
-            minute: reminderMinuteInput ? Number(reminderMinuteInput.value || current.minute) : current.minute
-          };
-          saveReminderSettings(next);
-          // Feedback immédiat (ça évite l'impression que "rien ne se passe").
-          setReminderStatus(next.enabled ? "Rappels activés." : "Rappels désactivés.");
-          if (next.enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
-            requestReminderPermission();
-          }
-          syncReminderUI();
-          scheduleTirageReminders();
-        } catch (err) {
-          setReminderStatus("Erreur rappels: " + (err && err.message ? err.message : String(err)));
-        }
-      }
-
-      function scheduleReminderTest(timeStr) {
-        if (reminderTestTimer) {
-          clearTimeout(reminderTestTimer);
-          reminderTestTimer = null;
-        }
-        const m = /^(\d{2}):(\d{2})$/.exec(String(timeStr || ""));
-        if (!m) {
-          setReminderStatus("Heure de test invalide.");
-          return;
-        }
-        const hh = Number(m[1]);
-        const mm = Number(m[2]);
-        const target = new Date();
-        target.setHours(hh, mm, 0, 0);
-        if (target.getTime() <= Date.now() + 1000) target.setDate(target.getDate() + 1);
-        const waitMs = target.getTime() - Date.now();
-        setReminderStatus("Test programmé à " + target.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + ".");
-        addReminderHistory("test", "Test programmé à " + target.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + ".");
-        reminderTestTimer = setTimeout(function () {
-          showMobileNotification("Test rappel tirage", "Notification de test réussie.");
-          playReminderRingtone();
-          showToast("Notification de test envoyée.", "ok");
-          addReminderHistory("test", "Notification de test envoyée.");
-          scheduleTirageReminders();
-        }, waitMs);
-      }
+      // (Rappels / Notifications supprimés)
 
       function daysBetweenIso(a, b) {
         try {
@@ -2187,17 +1742,11 @@
             localStorage.removeItem(HISTORY_KEY);
             localStorage.removeItem(BABY_PROFILE_KEY);
             localStorage.removeItem(BABY_GROWTH_LOG_KEY);
-            localStorage.removeItem(REMINDER_SETTINGS_KEY);
-            localStorage.removeItem(REMINDER_HISTORY_KEY);
-            localStorage.removeItem(REMINDER_LAST_SENT_KEY);
             renderTodayTable();
             renderHistory();
             renderDailyRecap();
             renderBabyProfile(true);
             renderGrowthSection();
-            renderReminderHistory();
-            syncReminderUI();
-            scheduleTirageReminders();
           }
         );
       });
@@ -2221,13 +1770,6 @@
           }
           if (id === "recap-jour") renderDailyRecap();
           if (id === "graphiques") renderCharts();
-          if (id === "rappel") {
-            renderReminderFixedTimes();
-            renderReminderHistory();
-            syncReminderUI();
-            maybePromptNotificationOnMobile();
-            scheduleTirageReminders();
-          }
           if (id === "sync") {
             populateSyncUI();
             initFirebaseSync();
@@ -2264,64 +1806,6 @@
         initFirebaseSync();
       });
 
-      [reminderEnabledInput, reminderIntervalInput, reminderMinuteInput].forEach(function (el) {
-        if (!el) return;
-        el.addEventListener("change", persistReminderSettingsFromUI);
-        // Sur mobile, certains contrôles réagissent mieux à "input".
-        el.addEventListener("input", persistReminderSettingsFromUI);
-      });
-
-      if (reminderEnabledInput) {
-        reminderEnabledInput.addEventListener("click", persistReminderSettingsFromUI);
-      }
-
-      const btnReminderPermission = document.getElementById("btn-reminder-permission");
-      if (btnReminderPermission) {
-        btnReminderPermission.addEventListener("click", function () {
-          if (typeof Notification !== "undefined" && Notification.permission === "denied") {
-            showToast("Notifications bloquées : Chrome > cadenas > Notifications > Autoriser.", "error");
-            updateReminderPermissionUI();
-            return;
-          }
-          requestReminderPermission().finally(function () {
-            updateReminderPermissionUI();
-          });
-        });
-      }
-      const btnReminderTestNow = document.getElementById("btn-reminder-test-now");
-      if (btnReminderTestNow) {
-        btnReminderTestNow.addEventListener("click", function () {
-          showMobileNotification("Test rappel tirage", "Notification de test immédiate.");
-          playReminderRingtone();
-          showToast("Test notification lancé.", "ok");
-          addReminderHistory("test", "Notification de test immédiate.");
-        });
-      }
-      const btnReminderTestSchedule = document.getElementById("btn-reminder-test-schedule");
-      if (btnReminderTestSchedule) {
-        btnReminderTestSchedule.addEventListener("click", function () {
-          scheduleReminderTest(reminderTestTimeInput ? reminderTestTimeInput.value : "");
-        });
-      }
-      const btnReminderApplyFixed = document.getElementById("btn-reminder-apply-fixed");
-      if (btnReminderApplyFixed) {
-        btnReminderApplyFixed.addEventListener("click", function () {
-          if (reminderIntervalInput) reminderIntervalInput.value = "3";
-          if (reminderMinuteInput) reminderMinuteInput.value = "0";
-          persistReminderSettingsFromUI();
-          addReminderHistory("info", "Horaires fixes 00/03/06/09/12/15/18/21 appliqués.");
-          showToast("Horaires fixes appliqués.", "ok");
-        });
-      }
-      const btnReminderHistoryClear = document.getElementById("btn-reminder-history-clear");
-      if (btnReminderHistoryClear) {
-        btnReminderHistoryClear.addEventListener("click", function () {
-          saveReminderHistory([]);
-          renderReminderHistory();
-          setReminderStatus("Historique des rappels vidé.");
-        });
-      }
-
       document.getElementById("btn-export-json").addEventListener("click", function () {
         const bundle = {
           version: 1,
@@ -2330,9 +1814,6 @@
           names: loadNames(),
           babyProfile: loadBabyProfile(),
           babyGrowthLog: loadBabyGrowthLog(),
-          reminderSettings: loadReminderSettings(),
-          reminderHistory: loadReminderHistory(),
-          reminderLastSent: getLastSentMap(),
           historyLog: loadHistoryLog()
         };
         const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
@@ -2427,7 +1908,6 @@
       }
 
       function lockApp() {
-        clearReminderTimers();
         clearAllUnlockTokens();
         appRoot.hidden = true;
         lockScreen.hidden = false;
@@ -2439,9 +1919,6 @@
         ensureDefaultGrowthWeights();
         growthSectionUnlocked = false;
         applyGrowthLockState();
-        ensureServiceWorkerReady();
-        renderReminderFixedTimes();
-        renderReminderHistory();
         initVolumeShortcuts();
         renderBabyProfile(true);
         renderGrowthSection();
@@ -2449,9 +1926,6 @@
         renderHistory();
         renderDailyRecap();
         populateSyncUI();
-        syncReminderUI();
-        maybePromptNotificationOnMobile();
-        scheduleTirageReminders();
         initFirebaseSync();
         const localHash = localStorage.getItem(PWD_HASH_KEY);
         if (localHash) pushPasswordHashToCloud(localHash);
@@ -2474,23 +1948,9 @@
           if (bundle.babyGrowthLog && Array.isArray(bundle.babyGrowthLog)) {
             saveBabyGrowthLog(bundle.babyGrowthLog);
           }
-          if (bundle.reminderSettings && typeof bundle.reminderSettings === "object") {
-            saveReminderSettings(bundle.reminderSettings);
-          }
-          if (bundle.reminderHistory && Array.isArray(bundle.reminderHistory)) {
-            saveReminderHistory(bundle.reminderHistory);
-          }
-          if (bundle.reminderLastSent && typeof bundle.reminderLastSent === "object") {
-            try {
-              localStorage.setItem(REMINDER_LAST_SENT_KEY, JSON.stringify(bundle.reminderLastSent));
-            } catch (_e) {}
-          }
           applyNamesToInputs();
           renderBabyProfile(true);
           renderGrowthSection();
-          renderReminderHistory();
-          syncReminderUI();
-          scheduleTirageReminders();
           if (bundle.historyLog && Array.isArray(bundle.historyLog)) {
             saveHistoryLog(bundle.historyLog);
           }
@@ -2571,9 +2031,6 @@
             localStorage.removeItem(NAMES_KEY);
             localStorage.removeItem(BABY_PROFILE_KEY);
             localStorage.removeItem(BABY_GROWTH_LOG_KEY);
-            localStorage.removeItem(REMINDER_SETTINGS_KEY);
-            localStorage.removeItem(REMINDER_HISTORY_KEY);
-            localStorage.removeItem(REMINDER_LAST_SENT_KEY);
             localStorage.removeItem(PWD_HASH_KEY);
             clearCloudPasswordHash();
             clearAllUnlockTokens();

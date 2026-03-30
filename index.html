@@ -124,9 +124,6 @@
       <button type="button" class="tab" role="tab" id="tab-graphiques" aria-selected="false" aria-controls="panel-graphiques">
         <i class="fa-solid fa-chart-line" aria-hidden="true"></i>Graphiques
       </button>
-      <button type="button" class="tab" role="tab" id="tab-rappel" aria-selected="false" aria-controls="panel-rappel">
-        <i class="fa-regular fa-bell" aria-hidden="true"></i>Rappel
-      </button>
       <button type="button" class="tab" role="tab" id="tab-sync" aria-selected="false" aria-controls="panel-sync">
         <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>Partage
         <span class="sync-pill" id="sync-pill" aria-label="Statut synchro" hidden></span>
@@ -441,47 +438,6 @@
           <button type="button" class="ghost" id="btn-import-json">Importer un fichier...</button>
         </div>
         <input type="file" id="import-json-file" accept=".json,application/json" hidden />
-      </div>
-    </section>
-
-    <section id="panel-rappel" class="panel" role="tabpanel" aria-labelledby="tab-rappel" hidden>
-      <div class="card">
-        <h2><i class="fa-regular fa-bell" aria-hidden="true"></i> Rappels tirage (mobile)</h2>
-        <p class="lead mb-075">Rappels locaux : ils fonctionnent quand la page est ouverte. Sur mobile, autorisez les notifications.</p>
-        <p class="lead mb-075"><strong>Heures fixes :</strong></p>
-        <div class="reminder-times" id="reminder-fixed-times" aria-label="Heures fixes de rappel"></div>
-        <label class="lock-remember mb-075">
-          <input type="checkbox" id="reminder-enabled" />
-          <span>Activer les rappels automatiques</span>
-        </label>
-        <div class="reminder-grid mb-075">
-          <div>
-            <label for="reminder-interval-hours">Intervalle (heures)</label>
-            <input type="number" id="reminder-interval-hours" min="1" max="12" step="1" inputmode="numeric" />
-          </div>
-          <div>
-            <label for="reminder-minute">Minute dans l'heure</label>
-            <input type="number" id="reminder-minute" min="0" max="59" step="1" inputmode="numeric" />
-          </div>
-          <div>
-            <label for="reminder-test-time">Heure de test</label>
-            <input type="time" id="reminder-test-time" />
-          </div>
-        </div>
-        <div class="btn-row mb-075">
-          <button type="button" class="ghost" id="btn-reminder-permission">Autoriser notifications</button>
-          <button type="button" class="ghost" id="btn-reminder-test-now">Tester maintenant</button>
-          <button type="button" class="primary" id="btn-reminder-test-schedule">Programmer le test</button>
-          <button type="button" class="ghost" id="btn-reminder-apply-fixed">Appliquer 3h (00/03/06...)</button>
-        </div>
-        <p id="reminder-status" class="sync-status-line" aria-live="polite"></p>
-        <h3 class="chart-section-title">Historique des rappels</h3>
-        <div class="btn-row mb-075">
-          <button type="button" class="ghost" id="btn-reminder-history-clear">Vider l'historique</button>
-        </div>
-        <div class="reminder-history" id="reminder-history">
-          <ul id="reminder-history-list"></ul>
-        </div>
       </div>
     </section>
 

@@ -1582,55 +1582,6 @@
       min-height: 1.35em;
     }
 
-    .section-divider {
-      border: 0;
-      border-top: 1px solid var(--border);
-      margin: 0.9rem 0 0.85rem;
-    }
-
-    .reminder-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 0.65rem;
-      align-items: end;
-    }
-
-    .reminder-times {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin: 0.45rem 0 0.7rem;
-    }
-
-    .reminder-time-chip {
-      padding: 0.22rem 0.5rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-
-    .reminder-history {
-      margin-top: 0.45rem;
-      max-height: 220px;
-      overflow: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--surface);
-      padding: 0.45rem 0.6rem;
-    }
-
-    .reminder-history ul {
-      margin: 0;
-      padding-left: 1rem;
-    }
-
-    .reminder-history li {
-      margin: 0.2rem 0;
-      font-size: 0.82rem;
-      color: var(--text-muted);
-    }
 
     .volume-shortcuts {
       display: flex;
