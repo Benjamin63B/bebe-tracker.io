@@ -976,9 +976,12 @@
           minute: reminderMinuteInput ? Number(reminderMinuteInput.value || current.minute) : current.minute
         };
         saveReminderSettings(next);
+        // Feedback immédiat (ça évite l'impression que "rien ne se passe").
+        setReminderStatus(next.enabled ? "Rappels activés." : "Rappels désactivés.");
         if (next.enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
           requestReminderPermission();
         }
+        syncReminderUI();
         scheduleTirageReminders();
       }
 
@@ -2190,6 +2193,8 @@
       [reminderEnabledInput, reminderIntervalInput, reminderMinuteInput].forEach(function (el) {
         if (!el) return;
         el.addEventListener("change", persistReminderSettingsFromUI);
+        // Sur mobile, certains contrôles réagissent mieux à "input".
+        el.addEventListener("input", persistReminderSettingsFromUI);
       });
 
       const btnReminderPermission = document.getElementById("btn-reminder-permission");
