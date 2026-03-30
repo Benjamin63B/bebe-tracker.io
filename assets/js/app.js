@@ -369,6 +369,7 @@
             babyGrowthLog: loadBabyGrowthLog(),
             reminderSettings: loadReminderSettings(),
             reminderHistory: loadReminderHistory(),
+            reminderLastSent: getLastSentMap(),
             historyLog: loadHistoryLog(),
             updatedAt: firebase.database.ServerValue.TIMESTAMP
           },
@@ -439,6 +440,11 @@
             }
             if (v.reminderHistory && Array.isArray(v.reminderHistory)) {
               saveReminderHistory(v.reminderHistory);
+            }
+            if (v.reminderLastSent && typeof v.reminderLastSent === "object") {
+              try {
+                localStorage.setItem(REMINDER_LAST_SENT_KEY, JSON.stringify(v.reminderLastSent));
+              } catch (_e) {}
             }
             applyNamesToInputs();
             renderBabyProfile(true);
@@ -927,7 +933,7 @@
 
       function clearReminderTimers() {
         if (reminderTimer) {
-          clearTimeout(reminderTimer);
+          clearInterval(reminderTimer);
           reminderTimer = null;
         }
         if (reminderTestTimer) {
@@ -936,10 +942,65 @@
         }
       }
 
+      const REMINDER_LAST_SENT_KEY = "poupette_tirage_reminder_last_sent_v1";
+
+      function two(n) {
+        return String(n).padStart(2, "0");
+      }
+
+      function hhmm(d) {
+        return two(d.getHours()) + ":" + two(d.getMinutes());
+      }
+
+      function getLastSentMap() {
+        try {
+          const raw = localStorage.getItem(REMINDER_LAST_SENT_KEY);
+          if (!raw) return {};
+          const x = JSON.parse(raw);
+          return x && typeof x === "object" ? x : {};
+        } catch {
+          return {};
+        }
+      }
+
+      function setLastSent(dateIso, timeStr) {
+        const m = getLastSentMap();
+        m[String(dateIso)] = String(timeStr);
+        try {
+          localStorage.setItem(REMINDER_LAST_SENT_KEY, JSON.stringify(m));
+        } catch (_e) {}
+      }
+
+      function alreadySentToday(dateIso, timeStr) {
+        const m = getLastSentMap();
+        return m && m[String(dateIso)] === String(timeStr);
+      }
+
+      function computeNextFixedTimeLabel(now) {
+        const next = nextReminderDateFromFixedTimes(now);
+        return next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function maybeFireFixedReminder(now) {
+        const s = loadReminderSettings();
+        if (!s.enabled) return;
+        const t = hhmm(now);
+        if (FIXED_REMINDER_TIMES.indexOf(t) === -1) return;
+        const dateIso = todayISODate();
+        // Fenêtre courte pour éviter de rater le minuteur et éviter les doubles.
+        if (now.getSeconds() > 20) return;
+        if (alreadySentToday(dateIso, t)) return;
+        setLastSent(dateIso, t);
+        showMobileNotification("Rappel tirage", "Pensez au prochain tirage (" + t + ").");
+        playReminderRingtone();
+        showToast("Rappel tirage (" + t + ")", "ok");
+        addReminderHistory("envoyé", "Notification envoyée à " + t + ".");
+      }
+
       function scheduleTirageReminders() {
         try {
           if (reminderTimer) {
-            clearTimeout(reminderTimer);
+            clearInterval(reminderTimer);
             reminderTimer = null;
           }
           const s = loadReminderSettings();
@@ -947,24 +1008,19 @@
             setReminderStatus("Rappels désactivés.");
             return;
           }
-          const next = nextReminderDateFromFixedTimes(new Date());
-          const waitMs = Math.max(1000, next.getTime() - Date.now());
-          setReminderStatus(
-            "Prochain rappel à " + next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + "."
-          );
-          addReminderHistory(
-            "planifié",
-            "Prochain rappel prévu à " +
-              next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
-              "."
-          );
-          reminderTimer = setTimeout(function () {
-            showMobileNotification("Rappel tirage", "Pensez au prochain tirage.");
-            playReminderRingtone();
-            showToast("Rappel tirage", "ok");
-            addReminderHistory("envoyé", "Notification automatique envoyée.");
-            scheduleTirageReminders();
-          }, waitMs);
+          const now = new Date();
+          setReminderStatus("Rappels activés · prochain à " + computeNextFixedTimeLabel(now) + ".");
+          addReminderHistory("planifié", "Rappels actifs (heures fixes).");
+
+          // Mode robuste Android : polling léger (évite les timeouts “endormis”).
+          reminderTimer = setInterval(function () {
+            const cur = new Date();
+            // Met à jour de temps en temps le statut
+            if (cur.getSeconds() === 0) {
+              setReminderStatus("Rappels activés · prochain à " + computeNextFixedTimeLabel(cur) + ".");
+            }
+            maybeFireFixedReminder(cur);
+          }, 1000);
         } catch (err) {
           setReminderStatus("Erreur planification: " + (err && err.message ? err.message : String(err)));
         }
@@ -2133,6 +2189,7 @@
             localStorage.removeItem(BABY_GROWTH_LOG_KEY);
             localStorage.removeItem(REMINDER_SETTINGS_KEY);
             localStorage.removeItem(REMINDER_HISTORY_KEY);
+            localStorage.removeItem(REMINDER_LAST_SENT_KEY);
             renderTodayTable();
             renderHistory();
             renderDailyRecap();
@@ -2275,6 +2332,7 @@
           babyGrowthLog: loadBabyGrowthLog(),
           reminderSettings: loadReminderSettings(),
           reminderHistory: loadReminderHistory(),
+          reminderLastSent: getLastSentMap(),
           historyLog: loadHistoryLog()
         };
         const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
@@ -2422,6 +2480,11 @@
           if (bundle.reminderHistory && Array.isArray(bundle.reminderHistory)) {
             saveReminderHistory(bundle.reminderHistory);
           }
+          if (bundle.reminderLastSent && typeof bundle.reminderLastSent === "object") {
+            try {
+              localStorage.setItem(REMINDER_LAST_SENT_KEY, JSON.stringify(bundle.reminderLastSent));
+            } catch (_e) {}
+          }
           applyNamesToInputs();
           renderBabyProfile(true);
           renderGrowthSection();
@@ -2510,6 +2573,7 @@
             localStorage.removeItem(BABY_GROWTH_LOG_KEY);
             localStorage.removeItem(REMINDER_SETTINGS_KEY);
             localStorage.removeItem(REMINDER_HISTORY_KEY);
+            localStorage.removeItem(REMINDER_LAST_SENT_KEY);
             localStorage.removeItem(PWD_HASH_KEY);
             clearCloudPasswordHash();
             clearAllUnlockTokens();
