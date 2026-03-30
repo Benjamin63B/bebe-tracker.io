@@ -937,26 +937,37 @@
       }
 
       function scheduleTirageReminders() {
-        if (reminderTimer) {
-          clearTimeout(reminderTimer);
-          reminderTimer = null;
+        try {
+          if (reminderTimer) {
+            clearTimeout(reminderTimer);
+            reminderTimer = null;
+          }
+          const s = loadReminderSettings();
+          if (!s.enabled) {
+            setReminderStatus("Rappels désactivés.");
+            return;
+          }
+          const next = nextReminderDateFromFixedTimes(new Date());
+          const waitMs = Math.max(1000, next.getTime() - Date.now());
+          setReminderStatus(
+            "Prochain rappel à " + next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + "."
+          );
+          addReminderHistory(
+            "planifié",
+            "Prochain rappel prévu à " +
+              next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
+              "."
+          );
+          reminderTimer = setTimeout(function () {
+            showMobileNotification("Rappel tirage", "Pensez au prochain tirage.");
+            playReminderRingtone();
+            showToast("Rappel tirage", "ok");
+            addReminderHistory("envoyé", "Notification automatique envoyée.");
+            scheduleTirageReminders();
+          }, waitMs);
+        } catch (err) {
+          setReminderStatus("Erreur planification: " + (err && err.message ? err.message : String(err)));
         }
-        const s = loadReminderSettings();
-        if (!s.enabled) {
-          setReminderStatus("Rappels désactivés.");
-          return;
-        }
-        const next = nextReminderDateFromFixedTimes(new Date());
-        const waitMs = Math.max(1000, next.getTime() - Date.now());
-        setReminderStatus("Prochain rappel à " + next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + ".");
-        addReminderHistory("planifié", "Prochain rappel prévu à " + next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + ".");
-        reminderTimer = setTimeout(function () {
-          showMobileNotification("Rappel tirage", "Pensez au prochain tirage.");
-          playReminderRingtone();
-          showToast("Rappel tirage", "ok");
-          addReminderHistory("envoyé", "Notification automatique envoyée.");
-          scheduleTirageReminders();
-        }, waitMs);
       }
 
       function syncReminderUI() {
@@ -969,20 +980,26 @@
       }
 
       function persistReminderSettingsFromUI() {
-        const current = loadReminderSettings();
-        const next = {
-          enabled: reminderEnabledInput ? reminderEnabledInput.checked : current.enabled,
-          intervalHours: reminderIntervalInput ? Number(reminderIntervalInput.value || current.intervalHours) : current.intervalHours,
-          minute: reminderMinuteInput ? Number(reminderMinuteInput.value || current.minute) : current.minute
-        };
-        saveReminderSettings(next);
-        // Feedback immédiat (ça évite l'impression que "rien ne se passe").
-        setReminderStatus(next.enabled ? "Rappels activés." : "Rappels désactivés.");
-        if (next.enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
-          requestReminderPermission();
+        try {
+          const current = loadReminderSettings();
+          const next = {
+            enabled: reminderEnabledInput ? reminderEnabledInput.checked : current.enabled,
+            intervalHours: reminderIntervalInput
+              ? Number(reminderIntervalInput.value || current.intervalHours)
+              : current.intervalHours,
+            minute: reminderMinuteInput ? Number(reminderMinuteInput.value || current.minute) : current.minute
+          };
+          saveReminderSettings(next);
+          // Feedback immédiat (ça évite l'impression que "rien ne se passe").
+          setReminderStatus(next.enabled ? "Rappels activés." : "Rappels désactivés.");
+          if (next.enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
+            requestReminderPermission();
+          }
+          syncReminderUI();
+          scheduleTirageReminders();
+        } catch (err) {
+          setReminderStatus("Erreur rappels: " + (err && err.message ? err.message : String(err)));
         }
-        syncReminderUI();
-        scheduleTirageReminders();
       }
 
       function scheduleReminderTest(timeStr) {
@@ -2196,6 +2213,10 @@
         // Sur mobile, certains contrôles réagissent mieux à "input".
         el.addEventListener("input", persistReminderSettingsFromUI);
       });
+
+      if (reminderEnabledInput) {
+        reminderEnabledInput.addEventListener("click", persistReminderSettingsFromUI);
+      }
 
       const btnReminderPermission = document.getElementById("btn-reminder-permission");
       if (btnReminderPermission) {
