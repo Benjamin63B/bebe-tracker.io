@@ -5,6 +5,7 @@ const state = {
 };
 
 const APP_TITLE_BASE = "Statistique 2026";
+const DAILY_GOAL_ML = 1000;
 const TAB_TITLES = {
   today: "Aujourd'hui",
   history: "Historique",
@@ -149,25 +150,48 @@ function renderTodayList(entries) {
     return;
   }
 
-  const header = `
-    <div class="item item-head">
-      <strong>Heure</strong>
-      <strong>Tire-lait</strong>
-      <strong>Biberon</strong>
-      <strong>Note</strong>
-    </div>`;
+  const milkEntries = entries.filter((entry) => Number(entry.milkPumpedMl || 0) > 0);
+  const bottleEntries = entries.filter((entry) => Number(entry.bottleMl || 0) > 0);
 
-  list.innerHTML = header + entries
-    .map(
-      (entry) => `
-      <div class="item">
-        <strong>${entry.time}</strong>
-        <span>Tire-lait: ${entry.milkPumpedMl} ml</span>
-        <span>Biberon: ${entry.bottleMl} ml</span>
-        <strong class="note-strong">${entry.note || "-"}</strong>
-      </div>`
-    )
-    .join("");
+  function renderSectionRows(sectionEntries, type) {
+    if (!sectionEntries.length) {
+      return "<p class='today-empty'>Aucune entrée.</p>";
+    }
+
+    return sectionEntries
+      .map((entry) => {
+        const value = type === "milk" ? `${entry.milkPumpedMl} ml` : `${entry.bottleMl} ml`;
+        return `
+        <div class="today-row">
+          <strong>${entry.time}</strong>
+          <span>${value}</span>
+          <strong class="note-strong">${entry.note || "-"}</strong>
+        </div>`;
+      })
+      .join("");
+  }
+
+  list.innerHTML = `
+    <div class="today-split">
+      <div class="today-col">
+        <h4>Tirages 🍼</h4>
+        <div class="today-head">
+          <strong>Heure</strong>
+          <strong>Volume</strong>
+          <strong>Note</strong>
+        </div>
+        ${renderSectionRows(milkEntries, "milk")}
+      </div>
+      <div class="today-col">
+        <h4>Biberons 🧴</h4>
+        <div class="today-head">
+          <strong>Heure</strong>
+          <strong>Volume</strong>
+          <strong>Note</strong>
+        </div>
+        ${renderSectionRows(bottleEntries, "bottle")}
+      </div>
+    </div>`;
 }
 
 function renderHistorySplit(entries) {
@@ -248,7 +272,7 @@ function setupHistoryFilters() {
 function renderTotalsTable(totals) {
   const tbody = document.querySelector("#totalsTable tbody");
   if (!totals.length) {
-    tbody.innerHTML = "<tr><td colspan='6'>Aucune donnée.</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='5'>Aucune donnée.</td></tr>";
     return;
   }
   tbody.innerHTML = totals
@@ -257,10 +281,9 @@ function renderTotalsTable(totals) {
       <tr>
         <td>${row.date}</td>
         <td>${row.countMilkEntries ?? 0}</td>
-        <td>${row.countBottleEntries ?? 0}</td>
         <td>${row.totalMilkPumped}</td>
+        <td>${row.countBottleEntries ?? 0}</td>
         <td>${row.totalBottle}</td>
-        <td>${row.totalGlobal}</td>
       </tr>`
     )
     .join("");
@@ -272,21 +295,27 @@ function renderChart(totals) {
     state.chart.destroy();
   }
 
+  const chartRows = [...totals].sort((a, b) => {
+    const aKey = String(a.dateIso || a.date || "");
+    const bKey = String(b.dateIso || b.date || "");
+    return aKey.localeCompare(bKey);
+  });
+
   state.chart = new Chart(ctx, {
     type: "line",
     data: {
-      labels: totals.map((t) => t.date),
+      labels: chartRows.map((t) => t.date),
       datasets: [
         {
           label: "Tire-lait (ml)",
-          data: totals.map((t) => t.totalMilkPumped),
+          data: chartRows.map((t) => t.totalMilkPumped),
           borderColor: "#1f9f7a",
           backgroundColor: "rgba(31, 159, 122, 0.2)",
           tension: 0.3
         },
         {
           label: "Biberon (ml)",
-          data: totals.map((t) => t.totalBottle),
+          data: chartRows.map((t) => t.totalBottle),
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.2)",
           tension: 0.3
@@ -352,12 +381,19 @@ function updateHomeStats(entries) {
   const totalMilk = entries.reduce((sum, e) => sum + Number(e.milkPumpedMl || 0), 0);
   const totalBottle = entries.reduce((sum, e) => sum + Number(e.bottleMl || 0), 0);
   const count = entries.length;
+  const milkEntriesCount = entries.filter((e) => Number(e.milkPumpedMl || 0) > 0).length;
+  const bottleEntriesCount = entries.filter((e) => Number(e.bottleMl || 0) > 0).length;
   const total = totalMilk + totalBottle;
+  const progressPct = Math.min(100, Math.round((totalMilk / DAILY_GOAL_ML) * 100));
 
   document.getElementById("statEntriesCount").textContent = String(count);
+  document.getElementById("statMilkEntriesCount").textContent = String(milkEntriesCount);
+  document.getElementById("statBottleEntriesCount").textContent = String(bottleEntriesCount);
   document.getElementById("statMilkTotal").textContent = `${totalMilk} ml`;
   document.getElementById("statBottleTotal").textContent = `${totalBottle} ml`;
   document.getElementById("statGlobalTotal").textContent = `${total} ml`;
+  document.getElementById("statProgressText").textContent = `${progressPct}% (${totalMilk}/${DAILY_GOAL_ML} ml)`;
+  document.getElementById("statProgressBar").style.width = `${progressPct}%`;
 }
 
 async function refreshAll() {
@@ -382,12 +418,14 @@ function setupEntryForm() {
   const timeInput = document.getElementById("entryTime");
   const noteInput = document.getElementById("entryNote");
   const breastfedFlag = document.getElementById("breastfedFlag");
+  const breastfedFlagBottle = document.getElementById("breastfedFlagBottle");
   dateInput.value = todayISODate();
   timeInput.value = nowHHMM();
 
-  breastfedFlag.addEventListener("change", () => {
+  function syncBreastfedNote() {
+    const hasBreastfed = Boolean(breastfedFlag?.checked) || Boolean(breastfedFlagBottle?.checked);
     const note = noteInput.value.trim();
-    if (breastfedFlag.checked) {
+    if (hasBreastfed) {
       if (note === "") {
         noteInput.value = "Tétée";
       } else if (!note.toLowerCase().includes("tétée")) {
@@ -397,7 +435,14 @@ function setupEntryForm() {
     }
 
     noteInput.value = noteInput.value.replace(/\s*-\s*Tétée/gi, "").replace(/\bTétée\b/gi, "").trim();
-  });
+  }
+
+  if (breastfedFlag) {
+    breastfedFlag.addEventListener("change", syncBreastfedNote);
+  }
+  if (breastfedFlagBottle) {
+    breastfedFlagBottle.addEventListener("change", syncBreastfedNote);
+  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -423,6 +468,24 @@ function setupEntryForm() {
     } catch (error) {
       toast(error.message, true);
     }
+  });
+}
+
+function setupQuickValueButtons() {
+  const groups = document.querySelectorAll(".quick-values[data-target]");
+  groups.forEach((group) => {
+    const targetId = group.getAttribute("data-target");
+    const input = document.getElementById(targetId);
+    if (!input) {
+      return;
+    }
+    group.querySelectorAll(".quick-value-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const value = Number(button.dataset.value || 0);
+        input.value = String(value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    });
   });
 }
 
@@ -473,6 +536,7 @@ async function bootstrap() {
   setupHistoryFilters();
   setupTotalsFilters();
   setupEntryForm();
+  setupQuickValueButtons();
   setupSettingsForm();
   await loadSettings();
   await refreshAll();

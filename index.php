@@ -58,21 +58,39 @@ if (authMustChangePassword()) {
             <strong id="statEntriesCount">0</strong>
           </div>
           <div class="stat-chip">
-            <span>Tire-lait</span>
+            <span>Entrées tirage 🍼</span>
+            <strong id="statMilkEntriesCount">0</strong>
+          </div>
+          <div class="stat-chip">
+            <span>Entrées biberon 🧴</span>
+            <strong id="statBottleEntriesCount">0</strong>
+          </div>
+          <div class="stat-chip">
+            <span>Tire-lait 🍼</span>
             <strong id="statMilkTotal">0 ml</strong>
           </div>
           <div class="stat-chip">
-            <span>Biberon</span>
+            <span>Biberon 🧴</span>
             <strong id="statBottleTotal">0 ml</strong>
           </div>
           <div class="stat-chip">
             <span>Total</span>
             <strong id="statGlobalTotal">0 ml</strong>
           </div>
+          <div class="stat-chip stat-chip-wide">
+            <span>Progression tire-lait du jour 🍼</span>
+            <strong id="statProgressText">0%</strong>
+            <div class="progress-track" aria-hidden="true">
+              <div id="statProgressBar" class="progress-fill"></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <h2>Nouvelle entrée</h2>
+      <div class="section-intro">
+        <h2>Nouvelle entrée</h2>
+        <p>Renseigne rapidement une prise, puis vérifie le récapitulatif juste en dessous.</p>
+      </div>
       <form id="entryForm" class="card">
         <div class="grid-2">
           <label>Date
@@ -85,7 +103,7 @@ if (authMustChangePassword()) {
 
         <div class="grid-2">
           <div class="block mint">
-            <h3>Tirage (tire-lait)</h3>
+            <h3>Tirage 🍼</h3>
             <label>Millilitres tirés
               <input type="number" id="milkPumpedMl" min="0" step="10" value="0" required>
             </label>
@@ -95,9 +113,18 @@ if (authMustChangePassword()) {
             </label>
           </div>
           <div class="block sky">
-            <h3>Biberon</h3>
+            <h3>Biberon 🧴</h3>
             <label>Millilitres au biberon
               <input type="number" id="bottleMl" min="0" step="10" value="0" required>
+            </label>
+            <div class="quick-values" data-target="bottleMl">
+              <button type="button" class="quick-value-btn" data-value="80">80ml</button>
+              <button type="button" class="quick-value-btn" data-value="100">100ml</button>
+              <button type="button" class="quick-value-btn" data-value="110">110ml</button>
+            </div>
+            <label class="toggle inline-toggle">
+              <input type="checkbox" id="breastfedFlagBottle">
+              Tétée associée
             </label>
           </div>
         </div>
@@ -176,11 +203,10 @@ if (authMustChangePassword()) {
         <label>Tri par
           <select id="totalsSortBy">
             <option value="dateIso">Date</option>
-            <option value="totalGlobal">Total global</option>
-            <option value="totalMilkPumped">Total tire-lait</option>
-            <option value="totalBottle">Total biberon</option>
             <option value="countMilkEntries">Nb tirages</option>
+            <option value="totalMilkPumped">Total tire-lait</option>
             <option value="countBottleEntries">Nb biberons</option>
+            <option value="totalBottle">Total biberon</option>
           </select>
         </label>
         <label>Ordre
@@ -203,10 +229,9 @@ if (authMustChangePassword()) {
             <tr>
               <th>Date</th>
               <th>Nb tirages</th>
-              <th>Nb biberons</th>
               <th>Total tire-lait (ml)</th>
+              <th>Nb biberons</th>
               <th>Total biberon (ml)</th>
-              <th>Total global (ml)</th>
             </tr>
           </thead>
           <tbody></tbody>
