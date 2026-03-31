@@ -21,7 +21,7 @@ Puis ouvre : `http://localhost:8000`
 
 1. Ouvre l'onglet **Parametres**
 2. Renseigne :
-   - `Code salon` (ex: `famille2026`)
+   - `Code salon` (ex: `projet`)
    - `Database URL` (ex: `https://xxx-default-rtdb.europe-west1.firebasedatabase.app`)
    - `Token` (optionnel selon tes regles de securite)
 3. Coche **Activer la synchro cloud**
