@@ -1,0 +1,6 @@
+{
+    "roomCode": "famille2026",
+    "databaseUrl": "https:\/\/eleonore-617ce-default-rtdb.europe-west1.firebasedatabase.app\/",
+    "entriesPath": "rooms\/{roomCode}\/bundle\/entries",
+    "syncEnabled": true
+}
