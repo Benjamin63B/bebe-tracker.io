@@ -16,6 +16,7 @@ if (authMustChangePassword()) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="icon" type="image/x-icon" href="assets/img/biberon.ico">
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -46,6 +47,15 @@ if (authMustChangePassword()) {
 
   <main class="container">
     <section id="today" class="tab-content active">
+      <div class="card day-nav-card">
+        <div class="day-nav">
+          <button type="button" id="dayPrevBtn" class="btn-secondary day-nav-btn">← Hier</button>
+          <button type="button" id="dayTodayBtn" class="btn-secondary day-nav-btn active">Aujourd'hui</button>
+          <button type="button" id="dayNextBtn" class="btn-secondary day-nav-btn">Demain →</button>
+        </div>
+        <p id="dayNavLabel" class="day-nav-label"></p>
+      </div>
+
       <div class="hero card">
         <div>
           <p class="hero-badge">Dashboard 2026</p>
@@ -175,6 +185,7 @@ if (authMustChangePassword()) {
                 <th>Heure</th>
                 <th>Biberon (ml)</th>
                 <th>Note</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -189,6 +200,7 @@ if (authMustChangePassword()) {
                 <th>Heure</th>
                 <th>Tire-lait (ml)</th>
                 <th>Note</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody></tbody>

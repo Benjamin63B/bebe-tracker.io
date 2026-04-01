@@ -267,6 +267,34 @@ th {
   color: var(--muted);
 }
 
+.day-nav-card {
+  padding-top: 0.85rem;
+  padding-bottom: 0.75rem;
+}
+
+.day-nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.day-nav-btn {
+  white-space: nowrap;
+}
+
+.day-nav-btn.active {
+  background: #344d5f;
+  color: #fff;
+}
+
+.day-nav-label {
+  margin: 0.55rem 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .card {
   background: linear-gradient(180deg, #ffffff, #fcfdff);
   border: 1px solid rgba(36, 50, 61, 0.1);
@@ -342,7 +370,39 @@ select:focus {
 }
 
 .history-split {
-  align-items: start;
+  align-items: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.history-split > .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-split .table-wrap {
+  overflow-x: auto;
+}
+
+#historyBottleTable,
+#historyMilkTable {
+  min-width: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+#historyBottleTable th,
+#historyBottleTable td,
+#historyMilkTable th,
+#historyMilkTable td {
+  padding: 0.58rem 0.48rem;
+}
+
+#historyBottleTable th:last-child,
+#historyBottleTable td:last-child,
+#historyMilkTable th:last-child,
+#historyMilkTable td:last-child {
+  width: 86px;
 }
 
 .grid-2 {
@@ -431,6 +491,33 @@ button {
 .btn-primary:active,
 .btn-secondary:active {
   transform: translateY(0);
+}
+
+.history-actions-cell {
+  white-space: nowrap;
+}
+
+.history-action-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  margin-right: 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.history-action-btn i {
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.history-action-btn.danger {
+  color: #7f1712;
+  background: rgba(179, 38, 30, 0.12);
 }
 
 .table-wrap {
@@ -799,6 +886,14 @@ tbody tr:hover {
   }
 
   .history-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .day-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .history-split {
     grid-template-columns: 1fr;
   }
 

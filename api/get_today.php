@@ -12,14 +12,18 @@ if (!settingsAreCloudReady($settings)) {
     jsonResponse(['success' => true, 'entries' => []]);
 }
 
-$today = date('Y-m-d');
+$requestedDate = trim((string)($_GET['date'] ?? ''));
+$today = normalizeDateToIso($requestedDate);
+if ($today === '') {
+    $today = date('Y-m-d');
+}
 
 try {
     $entries = array_values(array_filter(
         fetchEntriesFromFirebase(),
         static fn(array $entry): bool => ($entry['dateIso'] ?? '') === $today
     ));
-    jsonResponse(['success' => true, 'entries' => $entries]);
+    jsonResponse(['success' => true, 'entries' => $entries, 'date' => $today]);
 } catch (Throwable $e) {
     jsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
 }

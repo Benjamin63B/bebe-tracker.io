@@ -1,7 +1,8 @@
 const state = {
   chart: null,
   totalsRaw: [],
-  historyRaw: []
+  historyRaw: [],
+  currentDayIso: todayISODate()
 };
 
 const APP_TITLE_BASE = "Statistique 2026";
@@ -22,6 +23,12 @@ function todayISODate() {
 function nowHHMM() {
   const now = new Date();
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
+function shiftIsoDate(dateIso, deltaDays) {
+  const d = new Date(`${dateIso}T00:00:00`);
+  d.setDate(d.getDate() + deltaDays);
+  return d.toISOString().slice(0, 10);
 }
 
 function formatDateFrLong(value) {
@@ -68,6 +75,18 @@ async function api(path, options = {}) {
     throw new Error(data.error || "Erreur API");
   }
   return data;
+}
+
+function updateDayNavUi() {
+  const label = document.getElementById("dayNavLabel");
+  if (label) {
+    label.textContent = `📅 ${formatDateFrLong(state.currentDayIso)}`;
+  }
+  const todayBtn = document.getElementById("dayTodayBtn");
+  if (todayBtn) {
+    const isToday = state.currentDayIso === todayISODate();
+    todayBtn.classList.toggle("active", isToday);
+  }
 }
 
 function setupTabs() {
@@ -200,6 +219,15 @@ function renderHistorySplit(entries) {
   const bottleRows = entries.filter((e) => Number(e.bottleMl || 0) > 0);
   const milkRows = entries.filter((e) => Number(e.milkPumpedMl || 0) > 0);
 
+  function actionsCell(entry) {
+    const entryId = String(entry.id || "").replace(/"/g, "&quot;");
+    return `
+      <td class="history-actions-cell">
+        <button type="button" class="btn-secondary history-action-btn" data-action="edit" data-id="${entryId}" title="Modifier" aria-label="Modifier"><i class="fa-solid fa-pen"></i></button>
+        <button type="button" class="btn-secondary history-action-btn danger" data-action="delete" data-id="${entryId}" title="Supprimer" aria-label="Supprimer"><i class="fa-solid fa-trash"></i></button>
+      </td>`;
+  }
+
   bottleBody.innerHTML = bottleRows.length
     ? bottleRows
         .map(
@@ -208,11 +236,12 @@ function renderHistorySplit(entries) {
         <td>${formatDateFrLong(e.dateIso || e.date)}</td>
         <td>${e.time}</td>
         <td>${e.bottleMl}</td>
-        <td>${e.note || "-"}</td>
+        <td><strong class="note-strong">${e.note || "-"}</strong></td>
+        ${actionsCell(e)}
       </tr>`
         )
         .join("")
-    : "<tr><td colspan='4'>Aucune donnée biberon.</td></tr>";
+    : "<tr><td colspan='5'>Aucune donnée biberon.</td></tr>";
 
   milkBody.innerHTML = milkRows.length
     ? milkRows
@@ -222,11 +251,12 @@ function renderHistorySplit(entries) {
         <td>${formatDateFrLong(e.dateIso || e.date)}</td>
         <td>${e.time}</td>
         <td>${e.milkPumpedMl}</td>
-        <td>${e.note || "-"}</td>
+        <td><strong class="note-strong">${e.note || "-"}</strong></td>
+        ${actionsCell(e)}
       </tr>`
         )
         .join("")
-    : "<tr><td colspan='4'>Aucune donnée tirage.</td></tr>";
+    : "<tr><td colspan='5'>Aucune donnée tirage.</td></tr>";
 }
 
 function applyHistoryFiltersAndRender() {
@@ -266,6 +296,88 @@ function setupHistoryFilters() {
     }
     const evt = id === "historySearch" ? "input" : "change";
     el.addEventListener(evt, applyHistoryFiltersAndRender);
+  });
+}
+
+async function handleHistoryAction(action, entryId) {
+  const entry = state.historyRaw.find((row) => String(row.id || "") === String(entryId));
+  if (!entry || !entry.id) {
+    toast("Entrée introuvable", true);
+    return;
+  }
+
+  if (action === "delete") {
+    const ok = window.confirm("Supprimer cette entrée ?");
+    if (!ok) {
+      return;
+    }
+    await api("delete_entry.php", {
+      method: "POST",
+      body: JSON.stringify({ id: entry.id })
+    });
+    toast("Entrée supprimée");
+    await refreshAll();
+    return;
+  }
+
+  if (action === "edit") {
+    const nextDate = window.prompt("Date (AAAA-MM-JJ)", entry.dateIso || "");
+    if (nextDate === null) {
+      return;
+    }
+    const nextTime = window.prompt("Heure (HH:MM)", entry.time || "");
+    if (nextTime === null) {
+      return;
+    }
+    const nextMilk = window.prompt("Tire-lait (ml)", String(entry.milkPumpedMl || 0));
+    if (nextMilk === null) {
+      return;
+    }
+    const nextBottle = window.prompt("Biberon (ml)", String(entry.bottleMl || 0));
+    if (nextBottle === null) {
+      return;
+    }
+    const nextNote = window.prompt("Note", entry.note || "");
+    if (nextNote === null) {
+      return;
+    }
+
+    await api("update_entry.php", {
+      method: "POST",
+      body: JSON.stringify({
+        id: entry.id,
+        date: String(nextDate).trim(),
+        time: String(nextTime).trim(),
+        milkPumpedMl: Number(nextMilk || 0),
+        bottleMl: Number(nextBottle || 0),
+        note: String(nextNote).trim()
+      })
+    });
+    toast("Entrée modifiée");
+    await refreshAll();
+  }
+}
+
+function setupHistoryActions() {
+  document.addEventListener("click", async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const button = target.closest(".history-action-btn");
+    if (!(button instanceof HTMLElement)) {
+      return;
+    }
+    const action = button.getAttribute("data-action") || "";
+    const id = button.getAttribute("data-id") || "";
+    if (!action || !id) {
+      return;
+    }
+    try {
+      await handleHistoryAction(action, id);
+    } catch (error) {
+      toast(error.message || "Action impossible", true);
+    }
   });
 }
 
@@ -397,8 +509,13 @@ function updateHomeStats(entries) {
 }
 
 async function refreshAll() {
+  updateDayNavUi();
+  const entryDateInput = document.getElementById("entryDate");
+  if (entryDateInput) {
+    entryDateInput.value = state.currentDayIso;
+  }
   const [today, history, totals] = await Promise.all([
-    api("get_today.php"),
+    api(`get_today.php?date=${encodeURIComponent(state.currentDayIso)}`),
     api("get_history.php"),
     api("get_totals.php")
   ]);
@@ -419,7 +536,7 @@ function setupEntryForm() {
   const noteInput = document.getElementById("entryNote");
   const breastfedFlag = document.getElementById("breastfedFlag");
   const breastfedFlagBottle = document.getElementById("breastfedFlagBottle");
-  dateInput.value = todayISODate();
+  dateInput.value = state.currentDayIso;
   timeInput.value = nowHHMM();
 
   function syncBreastfedNote() {
@@ -463,12 +580,80 @@ function setupEntryForm() {
       await refreshAll();
       timeInput.value = nowHHMM();
       form.reset();
-      dateInput.value = todayISODate();
+      dateInput.value = state.currentDayIso;
       timeInput.value = nowHHMM();
     } catch (error) {
       toast(error.message, true);
     }
   });
+}
+
+function setupDayNavigation() {
+  const prevBtn = document.getElementById("dayPrevBtn");
+  const todayBtn = document.getElementById("dayTodayBtn");
+  const nextBtn = document.getElementById("dayNextBtn");
+  if (!prevBtn || !todayBtn || !nextBtn) {
+    return;
+  }
+
+  prevBtn.addEventListener("click", async () => {
+    state.currentDayIso = shiftIsoDate(state.currentDayIso, -1);
+    await refreshAll();
+  });
+
+  todayBtn.addEventListener("click", async () => {
+    state.currentDayIso = todayISODate();
+    await refreshAll();
+  });
+
+  nextBtn.addEventListener("click", async () => {
+    state.currentDayIso = shiftIsoDate(state.currentDayIso, 1);
+    await refreshAll();
+  });
+}
+
+function setupTodaySwipe() {
+  const todaySection = document.getElementById("today");
+  if (!todaySection) {
+    return;
+  }
+  let startX = 0;
+  let startY = 0;
+
+  todaySection.addEventListener(
+    "touchstart",
+    (event) => {
+      const touch = event.changedTouches?.[0];
+      if (!touch) {
+        return;
+      }
+      startX = touch.clientX;
+      startY = touch.clientY;
+    },
+    { passive: true }
+  );
+
+  todaySection.addEventListener(
+    "touchend",
+    async (event) => {
+      const touch = event.changedTouches?.[0];
+      if (!touch) {
+        return;
+      }
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) {
+        return;
+      }
+      if (dx < 0) {
+        state.currentDayIso = shiftIsoDate(state.currentDayIso, 1);
+      } else {
+        state.currentDayIso = shiftIsoDate(state.currentDayIso, -1);
+      }
+      await refreshAll();
+    },
+    { passive: true }
+  );
 }
 
 function setupQuickValueButtons() {
@@ -533,7 +718,10 @@ async function loadSettings() {
 async function bootstrap() {
   setupTabs();
   setupHamburgerMenu();
+  setupDayNavigation();
+  setupTodaySwipe();
   setupHistoryFilters();
+  setupHistoryActions();
   setupTotalsFilters();
   setupEntryForm();
   setupQuickValueButtons();

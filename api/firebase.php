@@ -423,3 +423,23 @@ function fetchEntriesFromFirebase(): array
     return $best;
 }
 
+function updateEntryInFirebase(string $entryId, array $entry): mixed
+{
+    $id = trim($entryId);
+    if ($id === '') {
+        throw new RuntimeException('ID entrée manquant.');
+    }
+
+    return firebaseRequest('PATCH', getConfiguredEntriesPath() . '/' . $id . '.json', $entry);
+}
+
+function deleteEntryInFirebase(string $entryId): mixed
+{
+    $id = trim($entryId);
+    if ($id === '') {
+        throw new RuntimeException('ID entrée manquant.');
+    }
+
+    return firebaseRequest('DELETE', getConfiguredEntriesPath() . '/' . $id . '.json');
+}
+
