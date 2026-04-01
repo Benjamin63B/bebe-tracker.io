@@ -657,6 +657,70 @@ function setupTotalsFilters() {
   });
 }
 
+function setupHeaderClock() {
+  const dateEl = document.getElementById("topbarDate");
+  const timeEl = document.getElementById("topbarTime");
+  if (!dateEl || !timeEl) {
+    return;
+  }
+
+  const render = () => {
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString("fr-FR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+    timeEl.textContent = now.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+  };
+
+  render();
+  setInterval(render, 1000);
+}
+
+const homeStatsAnimState = {
+  count: 0,
+  milkEntriesCount: 0,
+  bottleEntriesCount: 0,
+  totalMilk: 0,
+  totalBottle: 0,
+  total: 0,
+  progressPct: 0
+};
+
+function animateValue(from, to, onUpdate, duration = 520) {
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (reduceMotion) {
+    onUpdate(to);
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const start = performance.now();
+    const delta = to - from;
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    function step(now) {
+      const progress = Math.min(1, (now - start) / duration);
+      const value = from + delta * easeOutCubic(progress);
+      onUpdate(value);
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        onUpdate(to);
+        resolve();
+      }
+    }
+
+    requestAnimationFrame(step);
+  });
+}
+
 function updateHomeStats(entries) {
   const totalMilk = entries.reduce((sum, e) => sum + Number(e.milkPumpedMl || 0), 0);
   const totalBottle = entries.reduce((sum, e) => sum + Number(e.bottleMl || 0), 0);
@@ -665,39 +729,90 @@ function updateHomeStats(entries) {
   const bottleEntriesCount = entries.filter((e) => Number(e.bottleMl || 0) > 0).length;
   const total = totalMilk + totalBottle;
   const progressPct = Math.min(100, Math.round((totalMilk / DAILY_GOAL_ML) * 100));
+  const els = {
+    count: document.getElementById("statEntriesCount"),
+    milkEntries: document.getElementById("statMilkEntriesCount"),
+    bottleEntries: document.getElementById("statBottleEntriesCount"),
+    milkTotal: document.getElementById("statMilkTotal"),
+    bottleTotal: document.getElementById("statBottleTotal"),
+    globalTotal: document.getElementById("statGlobalTotal"),
+    progressText: document.getElementById("statProgressText"),
+    progressBar: document.getElementById("statProgressBar")
+  };
 
-  document.getElementById("statEntriesCount").textContent = String(count);
-  document.getElementById("statMilkEntriesCount").textContent = String(milkEntriesCount);
-  document.getElementById("statBottleEntriesCount").textContent = String(bottleEntriesCount);
-  document.getElementById("statMilkTotal").textContent = `${totalMilk} ml`;
-  document.getElementById("statBottleTotal").textContent = `${totalBottle} ml`;
-  document.getElementById("statGlobalTotal").textContent = `${total} ml`;
-  document.getElementById("statProgressText").textContent = `${progressPct}% (${totalMilk}/${DAILY_GOAL_ML} ml)`;
-  document.getElementById("statProgressBar").style.width = `${progressPct}%`;
+  if (!els.count || !els.progressBar || !els.progressText) {
+    return;
+  }
+
+  animateValue(homeStatsAnimState.count, count, (v) => {
+    els.count.textContent = String(Math.round(v));
+  });
+  animateValue(homeStatsAnimState.milkEntriesCount, milkEntriesCount, (v) => {
+    els.milkEntries.textContent = String(Math.round(v));
+  });
+  animateValue(homeStatsAnimState.bottleEntriesCount, bottleEntriesCount, (v) => {
+    els.bottleEntries.textContent = String(Math.round(v));
+  });
+  animateValue(homeStatsAnimState.totalMilk, totalMilk, (v) => {
+    els.milkTotal.textContent = `${Math.round(v)} ml`;
+  });
+  animateValue(homeStatsAnimState.totalBottle, totalBottle, (v) => {
+    els.bottleTotal.textContent = `${Math.round(v)} ml`;
+  });
+  animateValue(homeStatsAnimState.total, total, (v) => {
+    els.globalTotal.textContent = `${Math.round(v)} ml`;
+  });
+  animateValue(homeStatsAnimState.progressPct, progressPct, (v) => {
+    const pct = Math.round(v);
+    const animatedMilk = Math.round((pct / 100) * DAILY_GOAL_ML);
+    els.progressText.textContent = `${pct}% (${animatedMilk}/${DAILY_GOAL_ML} ml)`;
+    els.progressBar.style.width = `${pct}%`;
+  });
+
+  homeStatsAnimState.count = count;
+  homeStatsAnimState.milkEntriesCount = milkEntriesCount;
+  homeStatsAnimState.bottleEntriesCount = bottleEntriesCount;
+  homeStatsAnimState.totalMilk = totalMilk;
+  homeStatsAnimState.totalBottle = totalBottle;
+  homeStatsAnimState.total = total;
+  homeStatsAnimState.progressPct = progressPct;
+}
+
+function setDashboardLoading(isLoading) {
+  const hero = document.getElementById("homeHero");
+  if (!hero) {
+    return;
+  }
+  hero.classList.toggle("is-loading", Boolean(isLoading));
 }
 
 async function refreshAll() {
+  setDashboardLoading(true);
   updateDayNavUi();
   const entryDateInput = document.getElementById("entryDate");
   if (entryDateInput) {
     entryDateInput.value = state.currentDayIso;
   }
-  const [today, history, totals, stocks] = await Promise.all([
-    api(`get_today.php?date=${encodeURIComponent(state.currentDayIso)}`),
-    api("get_history.php"),
-    api("get_totals.php"),
-    api("get_stocks.php")
-  ]);
+  try {
+    const [today, history, totals, stocks] = await Promise.all([
+      api(`get_today.php?date=${encodeURIComponent(state.currentDayIso)}`),
+      api("get_history.php"),
+      api("get_totals.php"),
+      api("get_stocks.php")
+    ]);
 
-  const todayEntries = today.entries || [];
-  renderTodayList(todayEntries);
-  state.historyRaw = history.entries || [];
-  applyHistoryFiltersAndRender();
-  state.totalsRaw = totals.totals || [];
-  applyTotalsFiltersAndRender();
-  state.stocksRaw = stocks.movements || [];
-  renderStocks(state.stocksRaw);
-  updateHomeStats(todayEntries);
+    const todayEntries = today.entries || [];
+    renderTodayList(todayEntries);
+    state.historyRaw = history.entries || [];
+    applyHistoryFiltersAndRender();
+    state.totalsRaw = totals.totals || [];
+    applyTotalsFiltersAndRender();
+    state.stocksRaw = stocks.movements || [];
+    renderStocks(state.stocksRaw);
+    updateHomeStats(todayEntries);
+  } finally {
+    setDashboardLoading(false);
+  }
 }
 
 function setupEntryForm() {
@@ -958,6 +1073,7 @@ async function loadSettings() {
 
 async function bootstrap() {
   setupTabs();
+  setupHeaderClock();
   setupHamburgerMenu();
   setupDayNavigation();
   setupTodaySwipe();

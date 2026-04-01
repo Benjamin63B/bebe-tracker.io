@@ -31,6 +31,10 @@ if (authMustChangePassword()) {
       <div>
         <h1 id="projectTitle">Statistique 2026 - Aujourd'hui</h1>
         <p id="projectSubtitle">Historique, statistiques et suivi intelligent bébé.</p>
+        <p class="topbar-datetime">
+          <span id="topbarDate">--</span>
+          <span id="topbarTime" class="topbar-time">--:--:--</span>
+        </p>
       </div>
       <a href="logout.php" class="btn-secondary" style="margin-left:auto;">Déconnexion</a>
     </div>
@@ -57,34 +61,34 @@ if (authMustChangePassword()) {
         <p id="dayNavLabel" class="day-nav-label"></p>
       </div>
 
-      <div class="hero card">
+      <div id="homeHero" class="hero card">
         <div>
-          <p class="hero-badge">Dashboard 2026</p>
+          <p class="hero-badge">Dashboard 2026 - Vue rapide</p>
           <h2>Suivi intelligent de la journée</h2>
-          <p class="hero-subtitle">Visualise instantanément les prises de biberon, les tirages et les tendances du jour.</p>
+          <p class="hero-subtitle">Visualise en un coup d'oeil les tirages, les biberons et la progression du jour.</p>
         </div>
         <div class="hero-stats">
-          <div class="stat-chip">
+          <div class="stat-chip stat-chip-neutral">
             <span>Entrées</span>
             <strong id="statEntriesCount">0</strong>
           </div>
-          <div class="stat-chip">
+          <div class="stat-chip stat-chip-milk">
             <span>Entrées tirage 👩‍🍼</span>
             <strong id="statMilkEntriesCount">0</strong>
           </div>
-          <div class="stat-chip">
-            <span>Entrées biberon 🧴</span>
+          <div class="stat-chip stat-chip-bottle">
+            <span>Entrées biberon 🍼</span>
             <strong id="statBottleEntriesCount">0</strong>
           </div>
-          <div class="stat-chip">
+          <div class="stat-chip stat-chip-milk">
             <span>Tire-lait 👩‍🍼</span>
             <strong id="statMilkTotal">0 ml</strong>
           </div>
-          <div class="stat-chip">
-            <span>Biberon 🧴</span>
+          <div class="stat-chip stat-chip-bottle">
+            <span>Biberon 🍼</span>
             <strong id="statBottleTotal">0 ml</strong>
           </div>
-          <div class="stat-chip">
+          <div class="stat-chip stat-chip-neutral">
             <span>Total</span>
             <strong id="statGlobalTotal">0 ml</strong>
           </div>
@@ -124,7 +128,7 @@ if (authMustChangePassword()) {
             </label>
           </div>
           <div class="block sky">
-            <h3>Biberon 🧴</h3>
+            <h3>Biberon 🍼</h3>
             <label>Millilitres au biberon
               <input type="number" id="bottleMl" min="0" step="10" value="0" required>
             </label>
@@ -358,7 +362,7 @@ if (authMustChangePassword()) {
   </main>
 
   <footer class="footer">
-    Créé avec ❤️ Par Benjamin <?php echo htmlspecialchars($currentYear, ENT_QUOTES, 'UTF-8'); ?>
+    Créé avec <span class="footer-heart" aria-label="coeur">❤️</span> par Benjamin <?php echo htmlspecialchars($currentYear, ENT_QUOTES, 'UTF-8'); ?> 
   </footer>
 
   <div id="toast" class="toast"></div>
