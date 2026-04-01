@@ -443,3 +443,49 @@ function deleteEntryInFirebase(string $entryId): mixed
     return firebaseRequest('DELETE', getConfiguredEntriesPath() . '/' . $id . '.json');
 }
 
+function getConfiguredStocksPath(): string
+{
+    $settings = getSettings();
+    $roomCode = trim((string)($settings['roomCode'] ?? 'famille2026'));
+    return 'rooms/' . $roomCode . '/stocks';
+}
+
+function fetchStockMovementsFromFirebase(): array
+{
+    $raw = firebaseRequest('GET', getConfiguredStocksPath() . '.json');
+    if (!is_array($raw)) {
+        return [];
+    }
+
+    $rows = [];
+    foreach ($raw as $id => $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $dateIso = normalizeDateToIso((string)($row['date'] ?? ''));
+        $time = normalizeTimeToHHMM((string)($row['time'] ?? ''));
+        $rows[] = [
+            'id' => (string)$id,
+            'dateIso' => $dateIso,
+            'date' => displayDateLongFrFromIso($dateIso),
+            'time' => $time,
+            'direction' => (string)($row['direction'] ?? 'in'),
+            'category' => (string)($row['category'] ?? 'frozen'),
+            'amountMl' => max(0, (int)($row['amountMl'] ?? 0)),
+            'pumpDateIso' => normalizeDateToIso((string)($row['pumpDate'] ?? '')),
+            'expiryDateIso' => normalizeDateToIso((string)($row['expiryDate'] ?? '')),
+            'fifoSource' => is_array($row['fifoSource'] ?? null) ? $row['fifoSource'] : null,
+            'note' => trim((string)($row['note'] ?? '')),
+            'createdAt' => (string)($row['createdAt'] ?? ''),
+        ];
+    }
+
+    usort($rows, static function (array $a, array $b): int {
+        $aKey = ($a['dateIso'] ?? '') . ' ' . ($a['time'] ?? '');
+        $bKey = ($b['dateIso'] ?? '') . ' ' . ($b['time'] ?? '');
+        return strcmp($bKey, $aKey);
+    });
+
+    return $rows;
+}
+

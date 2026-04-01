@@ -41,6 +41,7 @@ if (authMustChangePassword()) {
     <button class="tab-btn" data-tab="history">Historique</button>
     <button class="tab-btn" data-tab="totals">Totaux par jour</button>
     <button class="tab-btn" data-tab="chart">Graphique</button>
+    <button class="tab-btn" data-tab="stocks">Stocks</button>
     <button class="tab-btn" data-tab="settings">Paramètres</button>
   </nav>
   <div id="navBackdrop" class="nav-backdrop"></div>
@@ -68,7 +69,7 @@ if (authMustChangePassword()) {
             <strong id="statEntriesCount">0</strong>
           </div>
           <div class="stat-chip">
-            <span>Entrées tirage 🍼</span>
+            <span>Entrées tirage 👩‍🍼</span>
             <strong id="statMilkEntriesCount">0</strong>
           </div>
           <div class="stat-chip">
@@ -76,7 +77,7 @@ if (authMustChangePassword()) {
             <strong id="statBottleEntriesCount">0</strong>
           </div>
           <div class="stat-chip">
-            <span>Tire-lait 🍼</span>
+            <span>Tire-lait 👩‍🍼</span>
             <strong id="statMilkTotal">0 ml</strong>
           </div>
           <div class="stat-chip">
@@ -88,7 +89,7 @@ if (authMustChangePassword()) {
             <strong id="statGlobalTotal">0 ml</strong>
           </div>
           <div class="stat-chip stat-chip-wide">
-            <span>Progression tire-lait du jour 🍼</span>
+            <span>Progression tire-lait du jour 👩‍🍼</span>
             <strong id="statProgressText">0%</strong>
             <div class="progress-track" aria-hidden="true">
               <div id="statProgressBar" class="progress-fill"></div>
@@ -113,7 +114,7 @@ if (authMustChangePassword()) {
 
         <div class="grid-2">
           <div class="block mint">
-            <h3>Tirage 🍼</h3>
+            <h3>Tirage 👩‍🍼</h3>
             <label>Millilitres tirés
               <input type="number" id="milkPumpedMl" min="0" step="10" value="0" required>
             </label>
@@ -174,6 +175,15 @@ if (authMustChangePassword()) {
             <option value="asc">Croissant</option>
           </select>
         </label>
+      </div>
+      <div class="card history-quick-filters">
+        <button type="button" class="history-chip" data-filter-group="type" data-filter-value="bottle">🍼 Biberon</button>
+        <button type="button" class="history-chip" data-filter-group="type" data-filter-value="milk">👩‍🍼 Tirage</button>
+        <button type="button" class="history-chip" data-filter-group="period" data-filter-value="1">📅 Aujourd'hui</button>
+        <button type="button" class="history-chip" data-filter-group="period" data-filter-value="7">📅 7 jours</button>
+        <button type="button" class="history-chip" data-filter-group="period" data-filter-value="30">📅 30 jours</button>
+        <button type="button" class="history-chip" data-filter-group="volume" data-filter-value="gt100">🔢 &gt;100ml</button>
+        <button type="button" class="history-chip" data-filter-group="volume" data-filter-value="lt100">🔢 &lt;100ml</button>
       </div>
       <div class="grid-2 history-split">
         <div class="card table-wrap">
@@ -255,6 +265,73 @@ if (authMustChangePassword()) {
       <h2>Graphique</h2>
       <div class="card">
         <canvas id="dailyChart" height="100"></canvas>
+      </div>
+    </section>
+
+    <section id="stocks" class="tab-content">
+      <h2>Stocks lait congelé / avancé</h2>
+      <div class="card stock-kpis">
+        <div class="stat-chip">
+          <span>Stock congelé total</span>
+          <strong id="stockFrozenMl">0 ml</strong>
+        </div>
+        <div class="stat-chip">
+          <span>Sorties FIFO (congelé)</span>
+          <strong id="stockFifoOutMl">0 ml</strong>
+        </div>
+      </div>
+
+      <form id="stockForm" class="card">
+        <div class="grid-2">
+          <label>Date
+            <input type="date" id="stockDate" required>
+          </label>
+          <label>Heure
+            <input type="time" id="stockTime" required>
+          </label>
+        </div>
+        <div class="grid-2">
+          <label>Date du tirage
+            <input type="date" id="stockPumpDate" required>
+          </label>
+          <label>Péremption estimée
+            <input type="date" id="stockExpiryDate" required>
+          </label>
+        </div>
+        <label>Type de mouvement
+          <select id="stockDirection">
+            <option value="in">Entrée (+)</option>
+            <option value="out">Sortie (-)</option>
+          </select>
+        </label>
+        <label>Volume (ml)
+          <input type="number" id="stockAmountMl" min="0" step="10" value="0" required>
+        </label>
+        <label>Note (facultatif)
+          <input type="text" id="stockNote" placeholder="Ex: sachet 120ml, décongelé pour biberon...">
+        </label>
+        <div class="actions">
+          <button type="submit" class="btn-primary">Ajouter mouvement</button>
+        </div>
+        <p id="stockFifoHint" class="status"></p>
+      </form>
+
+      <div class="card table-wrap">
+        <table id="stocksTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Heure</th>
+              <th>Date tirage</th>
+              <th>Péremption</th>
+              <th>Mouvement</th>
+              <th>Volume (ml)</th>
+              <th>FIFO</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </section>
 

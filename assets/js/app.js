@@ -2,7 +2,13 @@ const state = {
   chart: null,
   totalsRaw: [],
   historyRaw: [],
-  currentDayIso: todayISODate()
+  stocksRaw: [],
+  currentDayIso: todayISODate(),
+  historyQuickFilters: {
+    type: null,
+    period: null,
+    volume: null
+  }
 };
 
 const APP_TITLE_BASE = "Statistique 2026";
@@ -12,6 +18,7 @@ const TAB_TITLES = {
   history: "Historique",
   totals: "Totaux par jour",
   chart: "Graphique",
+  stocks: "Stocks",
   settings: "Paramètres"
 };
 
@@ -193,7 +200,7 @@ function renderTodayList(entries) {
   list.innerHTML = `
     <div class="today-split">
       <div class="today-col">
-        <h4>Tirages 🍼</h4>
+        <h4>Tirages 👩‍🍼</h4>
         <div class="today-head">
           <strong>Heure</strong>
           <strong>Volume</strong>
@@ -272,6 +279,37 @@ function applyHistoryFiltersAndRender() {
     });
   }
 
+  if (state.historyQuickFilters.type === "bottle") {
+    rows = rows.filter((e) => Number(e.bottleMl || 0) > 0);
+  } else if (state.historyQuickFilters.type === "milk") {
+    rows = rows.filter((e) => Number(e.milkPumpedMl || 0) > 0);
+  }
+
+  if (state.historyQuickFilters.period !== null) {
+    const days = Number(state.historyQuickFilters.period || 0);
+    if (days > 0) {
+      const now = new Date();
+      const threshold = new Date(now.getFullYear(), now.getMonth(), now.getDate() - days + 1);
+      rows = rows.filter((e) => {
+        const iso = String(e.dateIso || "");
+        if (!iso) {
+          return false;
+        }
+        const d = new Date(`${iso}T00:00:00`);
+        return d >= threshold;
+      });
+    }
+  }
+
+  if (state.historyQuickFilters.volume === "gt100") {
+    rows = rows.filter((e) => Math.max(Number(e.milkPumpedMl || 0), Number(e.bottleMl || 0)) > 100);
+  } else if (state.historyQuickFilters.volume === "lt100") {
+    rows = rows.filter((e) => {
+      const v = Math.max(Number(e.milkPumpedMl || 0), Number(e.bottleMl || 0));
+      return v > 0 && v < 100;
+    });
+  }
+
   rows.sort((a, b) => {
     let cmp = 0;
     if (sortBy === "dateTime") {
@@ -285,6 +323,29 @@ function applyHistoryFiltersAndRender() {
   });
 
   renderHistorySplit(rows);
+}
+
+function setupHistoryQuickFilters() {
+  const chips = document.querySelectorAll(".history-chip[data-filter-group][data-filter-value]");
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const group = chip.getAttribute("data-filter-group");
+      const value = chip.getAttribute("data-filter-value");
+      if (!group || !value) {
+        return;
+      }
+      const current = state.historyQuickFilters[group];
+      state.historyQuickFilters[group] = current === value ? null : value;
+      chips.forEach((other) => {
+        if (other.getAttribute("data-filter-group") !== group) {
+          return;
+        }
+        const isActive = state.historyQuickFilters[group] === other.getAttribute("data-filter-value");
+        other.classList.toggle("active", isActive);
+      });
+      applyHistoryFiltersAndRender();
+    });
+  });
 }
 
 function setupHistoryFilters() {
@@ -401,6 +462,101 @@ function renderTotalsTable(totals) {
     .join("");
 }
 
+function renderStocks(movements) {
+  const tbody = document.querySelector("#stocksTable tbody");
+  const frozenEl = document.getElementById("stockFrozenMl");
+  const fifoOutEl = document.getElementById("stockFifoOutMl");
+  if (!tbody || !frozenEl || !fifoOutEl) {
+    return;
+  }
+
+  let frozen = 0;
+  let fifoOut = 0;
+  movements.forEach((m) => {
+    const amount = Number(m.amountMl || 0);
+    const signed = m.direction === "out" ? -amount : amount;
+    frozen += signed;
+    if (m.direction === "out") {
+      fifoOut += amount;
+    }
+  });
+
+  frozen = Math.max(0, frozen);
+  frozenEl.textContent = `${frozen} ml`;
+  fifoOutEl.textContent = `${fifoOut} ml`;
+
+  if (!movements.length) {
+    tbody.innerHTML = "<tr><td colspan='8'>Aucun mouvement.</td></tr>";
+    return;
+  }
+
+  tbody.innerHTML = movements
+    .map((m) => {
+      const directionLabel = m.direction === "out" ? "Sortie" : "Entrée";
+      const fifoLabel = m.direction === "out" && m.fifoSource?.pumpDate
+        ? `Lot ${formatDateFrLong(m.fifoSource.pumpDate)}`
+        : "-";
+      return `
+      <tr>
+        <td>${m.date || formatDateFrLong(m.dateIso)}</td>
+        <td>${m.time || "-"}</td>
+        <td>${formatDateFrLong(m.pumpDateIso || "") || "-"}</td>
+        <td>${formatDateFrLong(m.expiryDateIso || "") || "-"}</td>
+        <td>${directionLabel}</td>
+        <td>${m.amountMl}</td>
+        <td>${fifoLabel}</td>
+        <td><strong class="note-strong">${m.note || "-"}</strong></td>
+      </tr>`;
+    })
+    .join("");
+}
+
+function computeEstimatedExpiryDate(pumpDateIso) {
+  const base = String(pumpDateIso || "").trim();
+  if (!base) {
+    return "";
+  }
+  const d = new Date(`${base}T00:00:00`);
+  if (Number.isNaN(d.getTime())) {
+    return "";
+  }
+  const days = 180;
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function computeFifoCandidate(movements, neededMl) {
+  const lots = [];
+  movements.forEach((m) => {
+    if (m.direction !== "in") {
+      return;
+    }
+    lots.push({
+      id: m.id,
+      pumpDateIso: m.pumpDateIso || m.dateIso || "",
+      remainingMl: Number(m.amountMl || 0),
+      expiryDateIso: m.expiryDateIso || ""
+    });
+  });
+
+  movements.forEach((m) => {
+    if (m.direction !== "out") {
+      return;
+    }
+    const sourceId = String(m.fifoSource?.id || "");
+    if (!sourceId) {
+      return;
+    }
+    const lot = lots.find((x) => String(x.id) === sourceId);
+    if (lot) {
+      lot.remainingMl = Math.max(0, lot.remainingMl - Number(m.amountMl || 0));
+    }
+  });
+
+  lots.sort((a, b) => String(a.pumpDateIso).localeCompare(String(b.pumpDateIso)));
+  return lots.find((lot) => lot.remainingMl >= neededMl) || null;
+}
+
 function renderChart(totals) {
   const ctx = document.getElementById("dailyChart");
   if (state.chart) {
@@ -514,10 +670,11 @@ async function refreshAll() {
   if (entryDateInput) {
     entryDateInput.value = state.currentDayIso;
   }
-  const [today, history, totals] = await Promise.all([
+  const [today, history, totals, stocks] = await Promise.all([
     api(`get_today.php?date=${encodeURIComponent(state.currentDayIso)}`),
     api("get_history.php"),
-    api("get_totals.php")
+    api("get_totals.php"),
+    api("get_stocks.php")
   ]);
 
   const todayEntries = today.entries || [];
@@ -526,6 +683,8 @@ async function refreshAll() {
   applyHistoryFiltersAndRender();
   state.totalsRaw = totals.totals || [];
   applyTotalsFiltersAndRender();
+  state.stocksRaw = stocks.movements || [];
+  renderStocks(state.stocksRaw);
   updateHomeStats(todayEntries);
 }
 
@@ -702,6 +861,76 @@ function setupSettingsForm() {
   });
 }
 
+function setupStockForm() {
+  const form = document.getElementById("stockForm");
+  const dateInput = document.getElementById("stockDate");
+  const timeInput = document.getElementById("stockTime");
+  const pumpDateInput = document.getElementById("stockPumpDate");
+  const expiryDateInput = document.getElementById("stockExpiryDate");
+  const directionInput = document.getElementById("stockDirection");
+  const amountInput = document.getElementById("stockAmountMl");
+  const fifoHint = document.getElementById("stockFifoHint");
+
+  if (!form || !dateInput || !timeInput || !pumpDateInput || !expiryDateInput || !directionInput || !amountInput || !fifoHint) {
+    return;
+  }
+  dateInput.value = todayISODate();
+  timeInput.value = nowHHMM();
+  pumpDateInput.value = todayISODate();
+  expiryDateInput.value = computeEstimatedExpiryDate(pumpDateInput.value);
+
+  function refreshStockDerivedFields() {
+    const dir = directionInput.value;
+    if (dir === "in") {
+      expiryDateInput.value = computeEstimatedExpiryDate(pumpDateInput.value);
+      fifoHint.textContent = "FIFO: les sorties utiliseront automatiquement le lot le plus ancien.";
+      return;
+    }
+    const needed = Number(amountInput.value || 0);
+    const candidate = computeFifoCandidate(state.stocksRaw, needed);
+    if (!candidate) {
+      fifoHint.textContent = "FIFO: aucun lot suffisant disponible pour cette sortie.";
+      return;
+    }
+    fifoHint.textContent = `FIFO: sortie depuis le lot du ${formatDateFrLong(candidate.pumpDateIso)} (${candidate.remainingMl} ml dispos).`;
+  }
+
+  [pumpDateInput, directionInput, amountInput].forEach((el) => {
+    el.addEventListener("input", refreshStockDerivedFields);
+    el.addEventListener("change", refreshStockDerivedFields);
+  });
+  refreshStockDerivedFields();
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const payload = {
+      date: dateInput.value,
+      time: timeInput.value,
+      direction: document.getElementById("stockDirection")?.value || "in",
+      amountMl: Number(document.getElementById("stockAmountMl")?.value || 0),
+      pumpDate: pumpDateInput.value,
+      expiryDate: expiryDateInput.value,
+      note: String(document.getElementById("stockNote")?.value || "").trim()
+    };
+    try {
+      await api("add_stock_movement.php", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      toast("Mouvement de stock ajouté");
+      form.reset();
+      dateInput.value = todayISODate();
+      timeInput.value = nowHHMM();
+      pumpDateInput.value = todayISODate();
+      expiryDateInput.value = computeEstimatedExpiryDate(pumpDateInput.value);
+      await refreshAll();
+      refreshStockDerivedFields();
+    } catch (error) {
+      toast(error.message, true);
+    }
+  });
+}
+
 async function loadSettings() {
   try {
     const response = await api("get_settings.php");
@@ -721,10 +950,12 @@ async function bootstrap() {
   setupDayNavigation();
   setupTodaySwipe();
   setupHistoryFilters();
+  setupHistoryQuickFilters();
   setupHistoryActions();
   setupTotalsFilters();
   setupEntryForm();
   setupQuickValueButtons();
+  setupStockForm();
   setupSettingsForm();
   await loadSettings();
   await refreshAll();
