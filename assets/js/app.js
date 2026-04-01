@@ -21,6 +21,14 @@ const TAB_TITLES = {
   stocks: "Stocks",
   settings: "Paramètres"
 };
+const TAB_SUBTITLES = {
+  today: "Vue du jour, saisie rapide et progression.",
+  history: "Retrouve et filtre les événements passés.",
+  totals: "Synthèse quotidienne des volumes et fréquences.",
+  chart: "Tendances visuelles sur plusieurs jours.",
+  stocks: "Gestion du stock congelé avec FIFO.",
+  settings: "Configuration Firebase et synchronisation."
+};
 
 function todayISODate() {
   const now = new Date();
@@ -100,6 +108,7 @@ function setupTabs() {
   const buttons = document.querySelectorAll(".tab-btn");
   const sections = document.querySelectorAll(".tab-content");
   const titleElement = document.getElementById("projectTitle");
+  const subtitleElement = document.getElementById("projectSubtitle");
 
   function setActiveTitle(tabKey) {
     const label = TAB_TITLES[tabKey] || "Aujourd'hui";
@@ -107,6 +116,9 @@ function setupTabs() {
     document.title = fullTitle;
     if (titleElement) {
       titleElement.textContent = fullTitle;
+    }
+    if (subtitleElement) {
+      subtitleElement.textContent = TAB_SUBTITLES[tabKey] || TAB_SUBTITLES.today;
     }
   }
 

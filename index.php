@@ -30,19 +30,19 @@ if (authMustChangePassword()) {
       </button>
       <div>
         <h1 id="projectTitle">Statistique 2026 - Aujourd'hui</h1>
-        <p>Suivi tire-lait + prise de biberon</p>
+        <p id="projectSubtitle">Historique, statistiques et suivi intelligent bébé.</p>
       </div>
       <a href="logout.php" class="btn-secondary" style="margin-left:auto;">Déconnexion</a>
     </div>
   </header>
 
   <nav class="navbar">
-    <button class="tab-btn active" data-tab="today">Aujourd'hui</button>
-    <button class="tab-btn" data-tab="history">Historique</button>
-    <button class="tab-btn" data-tab="totals">Totaux par jour</button>
-    <button class="tab-btn" data-tab="chart">Graphique</button>
-    <button class="tab-btn" data-tab="stocks">Stocks</button>
-    <button class="tab-btn" data-tab="settings">Paramètres</button>
+    <button class="tab-btn active" data-tab="today"><i class="fa-solid fa-calendar-day"></i><span>Aujourd'hui</span></button>
+    <button class="tab-btn" data-tab="history"><i class="fa-solid fa-clock-rotate-left"></i><span>Historique</span></button>
+    <button class="tab-btn" data-tab="totals"><i class="fa-solid fa-table-list"></i><span>Totaux par jour</span></button>
+    <button class="tab-btn" data-tab="chart"><i class="fa-solid fa-chart-line"></i><span>Graphique</span></button>
+    <button class="tab-btn" data-tab="stocks"><i class="fa-solid fa-snowflake"></i><span>Stocks</span></button>
+    <button class="tab-btn" data-tab="settings"><i class="fa-solid fa-sliders"></i><span>Paramètres</span></button>
   </nav>
   <div id="navBackdrop" class="nav-backdrop"></div>
 
