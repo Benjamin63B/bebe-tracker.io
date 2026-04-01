@@ -21,10 +21,44 @@ function authEnsureStorage(): void
     }
 }
 
+function authIsHttpsRequest(): bool
+{
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        return true;
+    }
+    if (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) {
+        return true;
+    }
+    $forwarded = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+    if ($forwarded === 'https') {
+        return true;
+    }
+    return false;
+}
+
 function authStartSession(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
         session_name('recap_auth');
+        $secure = authIsHttpsRequest();
+        // SameSite=None + Secure : nécessaire si la page est affichée dans un iframe
+        // (ex. panneau Home Assistant) — sinon le cookie de session est bloqué.
+        // Sur HTTP local uniquement, on reste en Lax.
+        $sameSite = $secure ? 'None' : 'Lax';
+        if (PHP_VERSION_ID >= 70300) {
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'domain' => '',
+                'secure' => $secure,
+                'httponly' => true,
+                'samesite' => $sameSite,
+            ]);
+        } else {
+            ini_set('session.cookie_secure', $secure ? '1' : '0');
+            ini_set('session.cookie_httponly', '1');
+            ini_set('session.cookie_samesite', $sameSite);
+        }
         session_start();
     }
 }
