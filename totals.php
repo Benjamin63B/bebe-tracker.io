@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-$pageKey = 'today';
+$pageKey = 'totals';
 require __DIR__ . '/includes/auth_init.php';
 require __DIR__ . '/includes/layout_top.php';
-require __DIR__ . '/partials/today.php';
+require __DIR__ . '/partials/totals.php';
 require __DIR__ . '/includes/layout_bottom.php';

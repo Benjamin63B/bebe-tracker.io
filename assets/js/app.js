@@ -11,24 +11,7 @@ const state = {
   }
 };
 
-const APP_TITLE_BASE = "Statistique 2026";
 const DAILY_GOAL_ML = 1000;
-const TAB_TITLES = {
-  today: "Aujourd'hui",
-  history: "Historique",
-  totals: "Totaux par jour",
-  chart: "Graphique",
-  stocks: "Stocks",
-  settings: "Paramètres"
-};
-const TAB_SUBTITLES = {
-  today: "Vue du jour, saisie rapide et progression.",
-  history: "Retrouve et filtre les événements passés.",
-  totals: "Synthèse quotidienne des volumes et fréquences.",
-  chart: "Tendances visuelles sur plusieurs jours.",
-  stocks: "Gestion du stock congelé avec FIFO.",
-  settings: "Configuration Firebase et synchronisation."
-};
 
 function todayISODate() {
   const now = new Date();
@@ -104,40 +87,8 @@ function updateDayNavUi() {
   }
 }
 
-function setupTabs() {
-  const buttons = document.querySelectorAll(".tab-btn");
-  const sections = document.querySelectorAll(".tab-content");
-  const titleElement = document.getElementById("projectTitle");
-  const subtitleElement = document.getElementById("projectSubtitle");
-
-  function setActiveTitle(tabKey) {
-    const label = TAB_TITLES[tabKey] || "Aujourd'hui";
-    const fullTitle = `${APP_TITLE_BASE} - ${label}`;
-    document.title = fullTitle;
-    if (titleElement) {
-      titleElement.textContent = fullTitle;
-    }
-    if (subtitleElement) {
-      subtitleElement.textContent = TAB_SUBTITLES[tabKey] || TAB_SUBTITLES.today;
-    }
-  }
-
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      buttons.forEach((b) => b.classList.remove("active"));
-      sections.forEach((s) => s.classList.remove("active"));
-      btn.classList.add("active");
-      const tabKey = btn.dataset.tab;
-      document.getElementById(tabKey).classList.add("active");
-      setActiveTitle(tabKey);
-      if (window.innerWidth <= 1024) {
-        document.body.classList.remove("nav-open");
-      }
-    });
-  });
-
-  const current = document.querySelector(".tab-btn.active");
-  setActiveTitle(current?.dataset.tab || "today");
+function getPageKey() {
+  return document.body.dataset.page || "today";
 }
 
 function setupHamburgerMenu() {
@@ -167,6 +118,12 @@ function setupHamburgerMenu() {
   });
 
   backdrop.addEventListener("click", close);
+
+  document.querySelectorAll(".navbar a.tab-btn").forEach((link) => {
+    link.addEventListener("click", () => {
+      close();
+    });
+  });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -232,6 +189,60 @@ function renderTodayList(entries) {
     </div>`;
 }
 
+function normalizeEntryDateIso(e) {
+  const iso = String(e.dateIso || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    return iso;
+  }
+  const raw = String(e.date || "").trim();
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+    const [d, m, y] = raw.split("/");
+    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+    return raw.slice(0, 10);
+  }
+  return iso || raw || "0000-00-00";
+}
+
+function normalizeEntryTime(t) {
+  const s = String(t || "00:00").trim();
+  const parts = s.split(":");
+  const h = String(parts[0] ?? "0").padStart(2, "0");
+  const m = String(parts[1] ?? "0").padStart(2, "0");
+  const sec = String(parts[2] ?? "0").padStart(2, "0");
+  return `${h}:${m}:${sec}`;
+}
+
+function compareHistoryEntries(a, b, sortBy, sortOrder) {
+  const mult = sortOrder === "asc" ? 1 : -1;
+  const dateA = normalizeEntryDateIso(a);
+  const dateB = normalizeEntryDateIso(b);
+  if (dateA !== dateB) {
+    return mult * dateA.localeCompare(dateB);
+  }
+  const tA = normalizeEntryTime(a.time);
+  const tB = normalizeEntryTime(b.time);
+  if (sortBy === "dateTime") {
+    return mult * tA.localeCompare(tB);
+  }
+  if (sortBy === "milkPumpedMl") {
+    const v = Number(a.milkPumpedMl || 0) - Number(b.milkPumpedMl || 0);
+    if (v !== 0) {
+      return mult * v;
+    }
+    return mult * tA.localeCompare(tB);
+  }
+  if (sortBy === "bottleMl") {
+    const v = Number(a.bottleMl || 0) - Number(b.bottleMl || 0);
+    if (v !== 0) {
+      return mult * v;
+    }
+    return mult * tA.localeCompare(tB);
+  }
+  return mult * tA.localeCompare(tB);
+}
+
 function renderHistorySplit(entries) {
   const bottleBody = document.querySelector("#historyBottleTable tbody");
   const milkBody = document.querySelector("#historyMilkTable tbody");
@@ -247,34 +258,44 @@ function renderHistorySplit(entries) {
       </td>`;
   }
 
+  function buildGroupedRows(rows, renderDataRow) {
+    if (!rows.length) {
+      return "";
+    }
+    let html = "";
+    let lastDateKey = null;
+    rows.forEach((e) => {
+      const dk = normalizeEntryDateIso(e);
+      if (dk !== lastDateKey) {
+        lastDateKey = dk;
+        const label = formatDateFrLong(dk);
+        html += `<tr class="history-date-heading"><td colspan="5"><span class="history-date-label">📅 ${label}</span></td></tr>`;
+      }
+      html += renderDataRow(e);
+    });
+    return html;
+  }
+
   bottleBody.innerHTML = bottleRows.length
-    ? bottleRows
-        .map(
-          (e) => `
+    ? buildGroupedRows(bottleRows, (e) => `
       <tr>
-        <td>${formatDateFrLong(e.dateIso || e.date)}</td>
+        <td class="history-date-cell-muted" aria-hidden="true">—</td>
         <td>${e.time}</td>
         <td>${e.bottleMl}</td>
         <td><strong class="note-strong">${e.note || "-"}</strong></td>
         ${actionsCell(e)}
-      </tr>`
-        )
-        .join("")
+      </tr>`)
     : "<tr><td colspan='5'>Aucune donnée biberon.</td></tr>";
 
   milkBody.innerHTML = milkRows.length
-    ? milkRows
-        .map(
-          (e) => `
+    ? buildGroupedRows(milkRows, (e) => `
       <tr>
-        <td>${formatDateFrLong(e.dateIso || e.date)}</td>
+        <td class="history-date-cell-muted" aria-hidden="true">—</td>
         <td>${e.time}</td>
         <td>${e.milkPumpedMl}</td>
         <td><strong class="note-strong">${e.note || "-"}</strong></td>
         ${actionsCell(e)}
-      </tr>`
-        )
-        .join("")
+      </tr>`)
     : "<tr><td colspan='5'>Aucune donnée tirage.</td></tr>";
 }
 
@@ -286,7 +307,8 @@ function applyHistoryFiltersAndRender() {
 
   if (search !== "") {
     rows = rows.filter((e) => {
-      const haystack = `${e.date} ${e.time} ${e.note || ""} ${e.milkPumpedMl} ${e.bottleMl}`.toLowerCase();
+      const iso = normalizeEntryDateIso(e);
+      const haystack = `${iso} ${e.date} ${e.time} ${e.note || ""} ${e.milkPumpedMl} ${e.bottleMl}`.toLowerCase();
       return haystack.includes(search);
     });
   }
@@ -303,14 +325,39 @@ function applyHistoryFiltersAndRender() {
       const now = new Date();
       const threshold = new Date(now.getFullYear(), now.getMonth(), now.getDate() - days + 1);
       rows = rows.filter((e) => {
-        const iso = String(e.dateIso || "");
-        if (!iso) {
+        const iso = normalizeEntryDateIso(e);
+        if (!iso || iso === "0000-00-00") {
           return false;
         }
         const d = new Date(`${iso}T00:00:00`);
         return d >= threshold;
       });
     }
+  }
+
+  const fromRaw = (document.getElementById("historyDateFrom")?.value || "").trim();
+  const toRaw = (document.getElementById("historyDateTo")?.value || "").trim();
+  if (fromRaw !== "" || toRaw !== "") {
+    let fromIso = fromRaw;
+    let toIso = toRaw;
+    if (fromIso !== "" && toIso !== "" && fromIso > toIso) {
+      const tmp = fromIso;
+      fromIso = toIso;
+      toIso = tmp;
+    }
+    rows = rows.filter((e) => {
+      const iso = normalizeEntryDateIso(e);
+      if (!iso || iso === "0000-00-00") {
+        return false;
+      }
+      if (fromIso !== "" && iso < fromIso) {
+        return false;
+      }
+      if (toIso !== "" && iso > toIso) {
+        return false;
+      }
+      return true;
+    });
   }
 
   if (state.historyQuickFilters.volume === "gt100") {
@@ -322,17 +369,7 @@ function applyHistoryFiltersAndRender() {
     });
   }
 
-  rows.sort((a, b) => {
-    let cmp = 0;
-    if (sortBy === "dateTime") {
-      const aKey = `${a.dateIso || ""} ${a.time || ""}`;
-      const bKey = `${b.dateIso || ""} ${b.time || ""}`;
-      cmp = aKey.localeCompare(bKey);
-    } else {
-      cmp = Number(a[sortBy] || 0) - Number(b[sortBy] || 0);
-    }
-    return sortOrder === "asc" ? cmp : -cmp;
-  });
+  rows.sort((a, b) => compareHistoryEntries(a, b, sortBy, sortOrder));
 
   renderHistorySplit(rows);
 }
@@ -361,7 +398,7 @@ function setupHistoryQuickFilters() {
 }
 
 function setupHistoryFilters() {
-  const inputs = ["historySearch", "historySortBy", "historySortOrder"];
+  const inputs = ["historySearch", "historySortBy", "historySortOrder", "historyDateFrom", "historyDateTo"];
   inputs.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) {
@@ -370,6 +407,20 @@ function setupHistoryFilters() {
     const evt = id === "historySearch" ? "input" : "change";
     el.addEventListener(evt, applyHistoryFiltersAndRender);
   });
+  const clearBtn = document.getElementById("historyDateClear");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      const fromEl = document.getElementById("historyDateFrom");
+      const toEl = document.getElementById("historyDateTo");
+      if (fromEl) {
+        fromEl.value = "";
+      }
+      if (toEl) {
+        toEl.value = "";
+      }
+      applyHistoryFiltersAndRender();
+    });
+  }
 }
 
 async function handleHistoryAction(action, entryId) {
@@ -456,6 +507,9 @@ function setupHistoryActions() {
 
 function renderTotalsTable(totals) {
   const tbody = document.querySelector("#totalsTable tbody");
+  if (!tbody) {
+    return;
+  }
   if (!totals.length) {
     tbody.innerHTML = "<tr><td colspan='5'>Aucune donnée.</td></tr>";
     return;
@@ -571,8 +625,12 @@ function computeFifoCandidate(movements, neededMl) {
 
 function renderChart(totals) {
   const ctx = document.getElementById("dailyChart");
+  if (!ctx) {
+    return;
+  }
   if (state.chart) {
     state.chart.destroy();
+    state.chart = null;
   }
 
   const chartRows = [...totals].sort((a, b) => {
@@ -787,31 +845,54 @@ function setDashboardLoading(isLoading) {
 }
 
 async function refreshAll() {
-  setDashboardLoading(true);
+  const page = getPageKey();
+  if (page === "today") {
+    setDashboardLoading(true);
+  }
   updateDayNavUi();
   const entryDateInput = document.getElementById("entryDate");
   if (entryDateInput) {
     entryDateInput.value = state.currentDayIso;
   }
   try {
-    const [today, history, totals, stocks] = await Promise.all([
-      api(`get_today.php?date=${encodeURIComponent(state.currentDayIso)}`),
-      api("get_history.php"),
-      api("get_totals.php"),
-      api("get_stocks.php")
-    ]);
-
-    const todayEntries = today.entries || [];
-    renderTodayList(todayEntries);
-    state.historyRaw = history.entries || [];
-    applyHistoryFiltersAndRender();
-    state.totalsRaw = totals.totals || [];
-    applyTotalsFiltersAndRender();
-    state.stocksRaw = stocks.movements || [];
-    renderStocks(state.stocksRaw);
-    updateHomeStats(todayEntries);
+    if (page === "today") {
+      const today = await api(`get_today.php?date=${encodeURIComponent(state.currentDayIso)}`);
+      const todayEntries = today.entries || [];
+      renderTodayList(todayEntries);
+      updateHomeStats(todayEntries);
+      return;
+    }
+    if (page === "history") {
+      const history = await api("get_history.php");
+      state.historyRaw = history.entries || [];
+      applyHistoryFiltersAndRender();
+      return;
+    }
+    if (page === "totals") {
+      const totals = await api("get_totals.php");
+      state.totalsRaw = totals.totals || [];
+      applyTotalsFiltersAndRender();
+      return;
+    }
+    if (page === "chart") {
+      const totals = await api("get_totals.php");
+      state.totalsRaw = totals.totals || [];
+      applyTotalsFiltersAndRender();
+      return;
+    }
+    if (page === "stocks") {
+      const stocks = await api("get_stocks.php");
+      state.stocksRaw = stocks.movements || [];
+      renderStocks(state.stocksRaw);
+      return;
+    }
+    if (page === "settings") {
+      return;
+    }
   } finally {
-    setDashboardLoading(false);
+    if (page === "today") {
+      setDashboardLoading(false);
+    }
   }
 }
 
@@ -822,6 +903,9 @@ function setupEntryForm() {
   const noteInput = document.getElementById("entryNote");
   const breastfedFlag = document.getElementById("breastfedFlag");
   const breastfedFlagBottle = document.getElementById("breastfedFlagBottle");
+  if (!form || !dateInput || !timeInput || !noteInput) {
+    return;
+  }
   dateInput.value = state.currentDayIso;
   timeInput.value = nowHHMM();
 
@@ -963,6 +1047,9 @@ function setupQuickValueButtons() {
 function setupSettingsForm() {
   const form = document.getElementById("settingsForm");
   const status = document.getElementById("syncStatus");
+  if (!form || !status) {
+    return;
+  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1072,20 +1159,30 @@ async function loadSettings() {
 }
 
 async function bootstrap() {
-  setupTabs();
+  const page = getPageKey();
   setupHeaderClock();
   setupHamburgerMenu();
-  setupDayNavigation();
-  setupTodaySwipe();
-  setupHistoryFilters();
-  setupHistoryQuickFilters();
-  setupHistoryActions();
-  setupTotalsFilters();
-  setupEntryForm();
-  setupQuickValueButtons();
-  setupStockForm();
-  setupSettingsForm();
-  await loadSettings();
+  if (page === "today") {
+    setupDayNavigation();
+    setupTodaySwipe();
+    setupEntryForm();
+    setupQuickValueButtons();
+  }
+  if (page === "history") {
+    setupHistoryFilters();
+    setupHistoryQuickFilters();
+    setupHistoryActions();
+  }
+  if (page === "totals" || page === "chart") {
+    setupTotalsFilters();
+  }
+  if (page === "stocks") {
+    setupStockForm();
+  }
+  if (page === "settings") {
+    setupSettingsForm();
+    await loadSettings();
+  }
   await refreshAll();
 }
 
