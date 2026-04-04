@@ -12,22 +12,12 @@
       </div>
 
       <form id="stockForm" class="card">
-        <div class="grid-2">
-          <label>Date
-            <input type="date" id="stockDate" required>
-          </label>
-          <label>Heure
-            <input type="time" id="stockTime" required>
-          </label>
-        </div>
-        <div class="grid-2">
-          <label>Date du tirage
-            <input type="date" id="stockPumpDate" required>
-          </label>
-          <label>Péremption estimée
-            <input type="date" id="stockExpiryDate" required>
-          </label>
-        </div>
+        <label>Date
+          <input type="date" id="stockDate" required>
+        </label>
+        <label>Date du tirage
+          <input type="date" id="stockPumpDate" required>
+        </label>
         <label>Type de mouvement
           <select id="stockDirection">
             <option value="in">Entrée (+)</option>
@@ -51,7 +41,6 @@
           <thead>
             <tr>
               <th>Date</th>
-              <th>Heure</th>
               <th>Date tirage</th>
               <th>Péremption</th>
               <th>Mouvement</th>

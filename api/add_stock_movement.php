@@ -21,8 +21,8 @@ $pumpDate = trim((string)($body['pumpDate'] ?? $date));
 $expiryDate = trim((string)($body['expiryDate'] ?? ''));
 $note = trim((string)($body['note'] ?? ''));
 
-if ($date === '' || $time === '' || $amountMl <= 0) {
-    jsonResponse(['success' => false, 'error' => 'Date, heure et volume sont obligatoires.'], 422);
+if ($date === '' || $amountMl <= 0) {
+    jsonResponse(['success' => false, 'error' => 'Date et volume sont obligatoires.'], 422);
 }
 if (!in_array($direction, ['in', 'out'], true)) {
     jsonResponse(['success' => false, 'error' => 'Type de mouvement invalide.'], 422);
@@ -39,7 +39,7 @@ if ($pumpDateIso === '') {
 $expiryDateIso = normalizeDateToIso($expiryDate);
 if ($expiryDateIso === '') {
     $baseTs = strtotime($pumpDateIso . ' 00:00:00');
-    $expiryDateIso = date('Y-m-d', strtotime('+180 days', $baseTs !== false ? $baseTs : time()));
+    $expiryDateIso = date('Y-m-d', strtotime('+8 months', $baseTs !== false ? $baseTs : time()));
 }
 
 $fifoSource = null;
@@ -96,6 +96,10 @@ if ($direction === 'out') {
     }
     if ($selected === null) {
         jsonResponse(['success' => false, 'error' => 'Stock insuffisant pour appliquer FIFO (lot le plus ancien).'], 422);
+    }
+    $lotExpiryIso = normalizeDateToIso((string)($selected['expiryDateIso'] ?? ''));
+    if ($lotExpiryIso !== '') {
+        $expiryDateIso = $lotExpiryIso;
     }
     $fifoSource = [
         'id' => $selected['id'],

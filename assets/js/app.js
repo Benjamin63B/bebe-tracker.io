@@ -552,7 +552,7 @@ function renderStocks(movements) {
   fifoOutEl.textContent = `${fifoOut} ml`;
 
   if (!movements.length) {
-    tbody.innerHTML = "<tr><td colspan='8'>Aucun mouvement.</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='7'>Aucun mouvement.</td></tr>";
     return;
   }
 
@@ -565,7 +565,6 @@ function renderStocks(movements) {
       return `
       <tr>
         <td>${m.date || formatDateFrLong(m.dateIso)}</td>
-        <td>${m.time || "-"}</td>
         <td>${formatDateFrLong(m.pumpDateIso || "") || "-"}</td>
         <td>${formatDateFrLong(m.expiryDateIso || "") || "-"}</td>
         <td>${directionLabel}</td>
@@ -575,20 +574,6 @@ function renderStocks(movements) {
       </tr>`;
     })
     .join("");
-}
-
-function computeEstimatedExpiryDate(pumpDateIso) {
-  const base = String(pumpDateIso || "").trim();
-  if (!base) {
-    return "";
-  }
-  const d = new Date(`${base}T00:00:00`);
-  if (Number.isNaN(d.getTime())) {
-    return "";
-  }
-  const days = 180;
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
 }
 
 function computeFifoCandidate(movements, neededMl) {
@@ -1078,25 +1063,20 @@ function setupSettingsForm() {
 function setupStockForm() {
   const form = document.getElementById("stockForm");
   const dateInput = document.getElementById("stockDate");
-  const timeInput = document.getElementById("stockTime");
   const pumpDateInput = document.getElementById("stockPumpDate");
-  const expiryDateInput = document.getElementById("stockExpiryDate");
   const directionInput = document.getElementById("stockDirection");
   const amountInput = document.getElementById("stockAmountMl");
   const fifoHint = document.getElementById("stockFifoHint");
 
-  if (!form || !dateInput || !timeInput || !pumpDateInput || !expiryDateInput || !directionInput || !amountInput || !fifoHint) {
+  if (!form || !dateInput || !pumpDateInput || !directionInput || !amountInput || !fifoHint) {
     return;
   }
   dateInput.value = todayISODate();
-  timeInput.value = nowHHMM();
   pumpDateInput.value = todayISODate();
-  expiryDateInput.value = computeEstimatedExpiryDate(pumpDateInput.value);
 
   function refreshStockDerivedFields() {
     const dir = directionInput.value;
     if (dir === "in") {
-      expiryDateInput.value = computeEstimatedExpiryDate(pumpDateInput.value);
       fifoHint.textContent = "FIFO: les sorties utiliseront automatiquement le lot le plus ancien.";
       return;
     }
@@ -1119,11 +1099,9 @@ function setupStockForm() {
     event.preventDefault();
     const payload = {
       date: dateInput.value,
-      time: timeInput.value,
       direction: document.getElementById("stockDirection")?.value || "in",
       amountMl: Number(document.getElementById("stockAmountMl")?.value || 0),
       pumpDate: pumpDateInput.value,
-      expiryDate: expiryDateInput.value,
       note: String(document.getElementById("stockNote")?.value || "").trim()
     };
     try {
@@ -1134,9 +1112,7 @@ function setupStockForm() {
       toast("Mouvement de stock ajouté");
       form.reset();
       dateInput.value = todayISODate();
-      timeInput.value = nowHHMM();
       pumpDateInput.value = todayISODate();
-      expiryDateInput.value = computeEstimatedExpiryDate(pumpDateInput.value);
       await refreshAll();
       refreshStockDerivedFields();
     } catch (error) {
