@@ -32,6 +32,11 @@ $pageMeta = [
         'headerTitle' => 'Statistique 2026 - Stocks',
         'subtitle' => 'Gestion du stock congelé avec FIFO.',
     ],
+    'stock_history' => [
+        'docTitle' => 'Statistique 2026 - Historique de stocks',
+        'headerTitle' => 'Statistique 2026 - Historique de stocks',
+        'subtitle' => 'Liste des mouvements triée par date.',
+    ],
     'settings' => [
         'docTitle' => 'Statistique 2026 - Paramètres',
         'headerTitle' => 'Statistique 2026 - Paramètres',
@@ -85,6 +90,7 @@ $docTitle = $m['docTitle'];
     <a class="tab-btn<?= $pageKey === 'totals' ? ' active' : ''; ?>" href="totals.php"><i class="fa-solid fa-table-list" aria-hidden="true"></i><span>Totaux</span></a>
     <a class="tab-btn<?= $pageKey === 'chart' ? ' active' : ''; ?>" href="chart.php"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Graphique</span></a>
     <a class="tab-btn<?= $pageKey === 'stocks' ? ' active' : ''; ?>" href="stocks.php"><i class="fa-solid fa-snowflake" aria-hidden="true"></i><span>Stocks</span></a>
+    <a class="tab-btn<?= $pageKey === 'stock_history' ? ' active' : ''; ?>" href="stock_history.php"><i class="fa-solid fa-list" aria-hidden="true"></i><span>Hist. stocks</span></a>
     <a class="tab-btn<?= $pageKey === 'settings' ? ' active' : ''; ?>" href="settings.php"><i class="fa-solid fa-sliders" aria-hidden="true"></i><span>Paramètres</span></a>
   </nav>
   <div id="navBackdrop" class="nav-backdrop"></div>

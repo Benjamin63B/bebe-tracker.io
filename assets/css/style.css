@@ -741,7 +741,8 @@ button {
   white-space: nowrap;
 }
 
-.history-action-btn {
+.history-action-btn,
+.stock-history-action-btn {
   width: 34px;
   height: 34px;
   padding: 0;
@@ -754,12 +755,14 @@ button {
   border-radius: 999px;
 }
 
-.history-action-btn i {
+.history-action-btn i,
+.stock-history-action-btn i {
   font-size: 0.9rem;
   pointer-events: none;
 }
 
-.history-action-btn.danger {
+.history-action-btn.danger,
+.stock-history-action-btn.danger {
   color: #7f1712;
   background: rgba(179, 38, 30, 0.12);
 }
@@ -1274,7 +1277,8 @@ tbody tr:hover {
     padding: 0.28rem 0.52rem;
   }
 
-  .history-action-btn {
+  .history-action-btn,
+  .stock-history-action-btn {
     width: 32px;
     height: 32px;
     margin-right: 0.22rem;

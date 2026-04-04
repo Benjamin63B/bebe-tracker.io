@@ -13,13 +13,27 @@ if (!settingsAreCloudReady($settings)) {
 }
 
 $body = readJsonBody();
-$date = trim((string)($body['date'] ?? ''));
-$time = trim((string)($body['time'] ?? ''));
-$direction = trim((string)($body['direction'] ?? 'in'));
-$amountMl = max(0, (int)($body['amountMl'] ?? 0));
-$pumpDate = trim((string)($body['pumpDate'] ?? $date));
-$expiryDate = trim((string)($body['expiryDate'] ?? ''));
-$note = trim((string)($body['note'] ?? ''));
+$id = trim((string)($body['id'] ?? ''));
+if ($id === '') {
+    jsonResponse(['success' => false, 'error' => 'ID mouvement manquant.'], 422);
+}
+
+try {
+    $rawExisting = firebaseRequest('GET', getConfiguredStocksPath() . '/' . rawurlencode($id) . '.json');
+} catch (Throwable $e) {
+    jsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+}
+
+if (!is_array($rawExisting)) {
+    jsonResponse(['success' => false, 'error' => 'Mouvement introuvable.'], 404);
+}
+
+$date = trim((string)($body['date'] ?? (string)($rawExisting['date'] ?? '')));
+$time = trim((string)($body['time'] ?? (string)($rawExisting['time'] ?? '')));
+$direction = trim((string)($body['direction'] ?? (string)($rawExisting['direction'] ?? 'in')));
+$amountMl = array_key_exists('amountMl', $body) ? max(0, (int)$body['amountMl']) : max(0, (int)($rawExisting['amountMl'] ?? 0));
+$pumpDate = trim((string)($body['pumpDate'] ?? (string)($rawExisting['pumpDate'] ?? $date)));
+$note = trim((string)($body['note'] ?? (string)($rawExisting['note'] ?? '')));
 
 if ($date === '' || $amountMl <= 0) {
     jsonResponse(['success' => false, 'error' => 'Date et volume (supérieur à 0) sont obligatoires.'], 422);
@@ -36,16 +50,20 @@ if ($pumpDateIso === '') {
     jsonResponse(['success' => false, 'error' => 'Date du tirage invalide.'], 422);
 }
 
-$expiryDateIso = normalizeDateToIso($expiryDate);
-if ($expiryDateIso === '') {
-    $baseTs = strtotime($pumpDateIso . ' 00:00:00');
-    $expiryDateIso = date('Y-m-d', strtotime('+8 months', $baseTs !== false ? $baseTs : time()));
-}
+$baseTs = strtotime($pumpDateIso . ' 00:00:00');
+$expiryDateIso = date('Y-m-d', strtotime('+8 months', $baseTs !== false ? $baseTs : time()));
 
 $fifoSource = null;
 if ($direction === 'out') {
-    $existing = fetchStockMovementsFromFirebase();
-    $fifo = selectFifoLotForOutgoing($existing, $amountMl);
+    $all = fetchStockMovementsFromFirebase();
+    $others = [];
+    foreach ($all as $move) {
+        if ((string)($move['id'] ?? '') === $id) {
+            continue;
+        }
+        $others[] = $move;
+    }
+    $fifo = selectFifoLotForOutgoing($others, $amountMl);
     if ($fifo === null) {
         jsonResponse(['success' => false, 'error' => 'Stock insuffisant pour appliquer FIFO (lot le plus ancien).'], 422);
     }
@@ -64,16 +82,17 @@ $movement = [
     'pumpDate' => $pumpDateIso,
     'expiryDate' => $expiryDateIso,
     'note' => $note,
-    'createdAt' => gmdate('c'),
+    'createdAt' => (string)($rawExisting['createdAt'] ?? gmdate('c')),
 ];
 if ($fifoSource !== null) {
     $movement['fifoSource'] = $fifoSource;
+} else {
+    $movement['fifoSource'] = null;
 }
 
 try {
-    $result = firebaseRequest('POST', getConfiguredStocksPath() . '.json', $movement);
-    jsonResponse(['success' => true, 'id' => $result['name'] ?? null, 'movement' => $movement]);
+    patchStockMovementInFirebase($id, $movement);
+    jsonResponse(['success' => true, 'id' => $id, 'movement' => $movement]);
 } catch (Throwable $e) {
     jsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
 }
-

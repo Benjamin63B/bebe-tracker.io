@@ -450,6 +450,96 @@ function getConfiguredStocksPath(): string
     return 'rooms/' . $roomCode . '/stocks';
 }
 
+/**
+ * @param array<int, array<string, mixed>> $existing Normalized movements (fetchStockMovementsFromFirebase)
+ * @return array{fifoSource: array{id: string, pumpDate: string, expiryDate: string}, expiryDateIso: string}|null
+ */
+function selectFifoLotForOutgoing(array $existing, int $amountMl): ?array
+{
+    if ($amountMl <= 0) {
+        return null;
+    }
+
+    $lots = [];
+    foreach ($existing as $move) {
+        $qty = (int)($move['amountMl'] ?? 0);
+        if ($qty <= 0) {
+            continue;
+        }
+        if (($move['direction'] ?? 'in') === 'out') {
+            continue;
+        }
+        $lots[] = [
+            'id' => (string)($move['id'] ?? ''),
+            'pumpDateIso' => (string)($move['pumpDateIso'] ?? ''),
+            'expiryDateIso' => (string)($move['expiryDateIso'] ?? ''),
+            'remainingMl' => $qty,
+        ];
+    }
+
+    foreach ($existing as $move) {
+        if (($move['direction'] ?? '') !== 'out') {
+            continue;
+        }
+        $sourceId = (string)(($move['fifoSource']['id'] ?? ''));
+        $used = (int)(($move['amountMl'] ?? 0));
+        if ($sourceId === '' || $used <= 0) {
+            continue;
+        }
+        foreach ($lots as &$lot) {
+            if ($lot['id'] === $sourceId) {
+                $lot['remainingMl'] = max(0, $lot['remainingMl'] - $used);
+                break;
+            }
+        }
+        unset($lot);
+    }
+
+    usort($lots, static function (array $a, array $b): int {
+        $aKey = ($a['pumpDateIso'] ?: '9999-12-31') . ' ' . ($a['id'] ?? '');
+        $bKey = ($b['pumpDateIso'] ?: '9999-12-31') . ' ' . ($b['id'] ?? '');
+        return strcmp($aKey, $bKey);
+    });
+
+    foreach ($lots as $lot) {
+        if (($lot['remainingMl'] ?? 0) < $amountMl) {
+            continue;
+        }
+        $lotExpiryIso = normalizeDateToIso((string)($lot['expiryDateIso'] ?? ''));
+
+        return [
+            'fifoSource' => [
+                'id' => $lot['id'],
+                'pumpDate' => $lot['pumpDateIso'],
+                'expiryDate' => $lot['expiryDateIso'],
+            ],
+            'expiryDateIso' => $lotExpiryIso,
+        ];
+    }
+
+    return null;
+}
+
+function deleteStockMovementInFirebase(string $movementId): mixed
+{
+    $id = trim($movementId);
+    if ($id === '') {
+        throw new RuntimeException('ID mouvement manquant.');
+    }
+
+    return firebaseRequest('DELETE', getConfiguredStocksPath() . '/' . rawurlencode($id) . '.json');
+}
+
+function patchStockMovementInFirebase(string $movementId, array $movement): mixed
+{
+    $id = trim($movementId);
+    if ($id === '') {
+        throw new RuntimeException('ID mouvement manquant.');
+    }
+
+    return firebaseRequest('PATCH', getConfiguredStocksPath() . '/' . rawurlencode($id) . '.json', $movement);
+}
+
 function fetchStockMovementsFromFirebase(): array
 {
     $raw = firebaseRequest('GET', getConfiguredStocksPath() . '.json');

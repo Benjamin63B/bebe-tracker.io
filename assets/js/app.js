@@ -505,6 +505,9 @@ function setupHistoryActions() {
     if (!(button instanceof HTMLElement)) {
       return;
     }
+    if (!document.getElementById("history")?.contains(button)) {
+      return;
+    }
     const action = button.getAttribute("data-action") || "";
     const id = button.getAttribute("data-id") || "";
     if (!action || !id) {
@@ -541,6 +544,63 @@ function renderTotalsTable(totals) {
     .join("");
 }
 
+function stockMovementRowCells(m) {
+  const directionLabel = m.direction === "out" ? "Sortie" : "Entrée";
+  const fifoLabel = m.direction === "out" && m.fifoSource?.pumpDate
+    ? `Lot ${formatDateFrLong(m.fifoSource.pumpDate)}`
+    : "-";
+  return `
+        <td>${m.date || formatDateFrLong(m.dateIso)}</td>
+        <td>${formatDateFrLong(m.pumpDateIso || "") || "-"}</td>
+        <td>${formatDateFrLong(m.expiryDateIso || "") || "-"}</td>
+        <td>${directionLabel}</td>
+        <td>${m.amountMl}</td>
+        <td>${fifoLabel}</td>`;
+}
+
+function stockMovementRowsHtml(movements) {
+  if (!movements.length) {
+    return "<tr><td colspan='6'>Aucun mouvement.</td></tr>";
+  }
+  return movements
+    .map((m) => `<tr>${stockMovementRowCells(m)}</tr>`)
+    .join("");
+}
+
+function stockHistoryRowsHtml(movements) {
+  if (!movements.length) {
+    return "<tr><td colspan='7'>Aucun mouvement.</td></tr>";
+  }
+  return movements
+    .map((m) => {
+      const mid = String(m.id || "").replace(/"/g, "&quot;");
+      return `<tr>${stockMovementRowCells(m)}
+        <td class="history-actions-cell">
+          <button type="button" class="btn-secondary stock-history-action-btn" data-action="edit" data-id="${mid}" title="Modifier" aria-label="Modifier"><i class="fa-solid fa-pen"></i></button>
+          <button type="button" class="btn-secondary stock-history-action-btn danger" data-action="delete" data-id="${mid}" title="Supprimer" aria-label="Supprimer"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+    })
+    .join("");
+}
+
+function sortStockMovements(movements, sortBy, sortOrder) {
+  const keyMap = { movement: "dateIso", pump: "pumpDateIso", expiry: "expiryDateIso" };
+  const key = keyMap[sortBy] || "dateIso";
+  const mult = sortOrder === "asc" ? 1 : -1;
+  return [...movements].sort((a, b) => {
+    let cmp = String(a[key] || "").localeCompare(String(b[key] || ""));
+    if (cmp !== 0) {
+      return mult * cmp;
+    }
+    cmp = String(a.time || "").localeCompare(String(b.time || ""));
+    if (cmp !== 0) {
+      return mult * cmp;
+    }
+    return mult * String(a.id || "").localeCompare(String(b.id || ""));
+  });
+}
+
 function renderStocks(movements) {
   const tbody = document.querySelector("#stocksTable tbody");
   const frozenEl = document.getElementById("stockFrozenMl");
@@ -564,29 +624,45 @@ function renderStocks(movements) {
   frozenEl.textContent = `${frozen} ml`;
   fifoOutEl.textContent = `${fifoOut} ml`;
 
-  if (!movements.length) {
-    tbody.innerHTML = "<tr><td colspan='7'>Aucun mouvement.</td></tr>";
+  tbody.innerHTML = stockMovementRowsHtml(movements);
+}
+
+function applyStockHistoryFiltersAndRender() {
+  const tbody = document.querySelector("#stocksHistoryTable tbody");
+  if (!tbody) {
     return;
   }
-
-  tbody.innerHTML = movements
-    .map((m) => {
-      const directionLabel = m.direction === "out" ? "Sortie" : "Entrée";
-      const fifoLabel = m.direction === "out" && m.fifoSource?.pumpDate
-        ? `Lot ${formatDateFrLong(m.fifoSource.pumpDate)}`
-        : "-";
-      return `
-      <tr>
-        <td>${m.date || formatDateFrLong(m.dateIso)}</td>
-        <td>${formatDateFrLong(m.pumpDateIso || "") || "-"}</td>
-        <td>${formatDateFrLong(m.expiryDateIso || "") || "-"}</td>
-        <td>${directionLabel}</td>
-        <td>${m.amountMl}</td>
-        <td>${fifoLabel}</td>
-        <td><strong class="note-strong">${m.note || "-"}</strong></td>
-      </tr>`;
-    })
-    .join("");
+  let rows = [...state.stocksRaw];
+  const fromRaw = (document.getElementById("stockHistoryDateFrom")?.value || "").trim();
+  const toRaw = (document.getElementById("stockHistoryDateTo")?.value || "").trim();
+  if (fromRaw !== "" || toRaw !== "") {
+    let fromIso = fromRaw;
+    let toIso = toRaw;
+    if (fromIso !== "" && toIso !== "" && fromIso > toIso) {
+      const tmp = fromIso;
+      fromIso = toIso;
+      toIso = tmp;
+    }
+    rows = rows.filter((m) => {
+      const iso = String(m.dateIso || "").trim();
+      if (!iso) {
+        return false;
+      }
+      if (fromIso !== "" && iso < fromIso) {
+        return false;
+      }
+      if (toIso !== "" && iso > toIso) {
+        return false;
+      }
+      return true;
+    });
+  }
+  const sortByEl = document.getElementById("stockHistorySortBy");
+  const orderEl = document.getElementById("stockHistorySortOrder");
+  const sortBy = sortByEl?.value || "movement";
+  const sortOrder = orderEl?.value || "desc";
+  const sorted = sortStockMovements(rows, sortBy, sortOrder);
+  tbody.innerHTML = stockHistoryRowsHtml(sorted);
 }
 
 function computeFifoCandidate(movements, neededMl) {
@@ -884,6 +960,12 @@ async function refreshAll() {
       renderStocks(state.stocksRaw);
       return;
     }
+    if (page === "stock_history") {
+      const stocks = await api("get_stocks.php");
+      state.stocksRaw = stocks.movements || [];
+      applyStockHistoryFiltersAndRender();
+      return;
+    }
     if (page === "settings") {
       return;
     }
@@ -1120,7 +1202,7 @@ function setupStockForm() {
       direction: document.getElementById("stockDirection")?.value || "in",
       amountMl,
       pumpDate: pumpDateInput.value,
-      note: String(document.getElementById("stockNote")?.value || "").trim()
+      note: ""
     };
     try {
       await api("add_stock_movement.php", {
@@ -1135,6 +1217,127 @@ function setupStockForm() {
       refreshStockDerivedFields();
     } catch (error) {
       toast(error.message, true);
+    }
+  });
+}
+
+function setupStockHistorySort() {
+  const sortBy = document.getElementById("stockHistorySortBy");
+  const sortOrder = document.getElementById("stockHistorySortOrder");
+  if (!sortBy || !sortOrder) {
+    return;
+  }
+  const rerender = () => {
+    applyStockHistoryFiltersAndRender();
+  };
+  sortBy.addEventListener("change", rerender);
+  sortOrder.addEventListener("change", rerender);
+}
+
+function setupStockHistoryFilters() {
+  ["stockHistoryDateFrom", "stockHistoryDateTo"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) {
+      return;
+    }
+    el.addEventListener("change", applyStockHistoryFiltersAndRender);
+  });
+  const clearBtn = document.getElementById("stockHistoryDateClear");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      const fromEl = document.getElementById("stockHistoryDateFrom");
+      const toEl = document.getElementById("stockHistoryDateTo");
+      if (fromEl) {
+        fromEl.value = "";
+      }
+      if (toEl) {
+        toEl.value = "";
+      }
+      applyStockHistoryFiltersAndRender();
+    });
+  }
+}
+
+async function handleStockHistoryAction(action, movementId) {
+  const m = state.stocksRaw.find((row) => String(row.id || "") === String(movementId));
+  if (!m || !m.id) {
+    toast("Mouvement introuvable", true);
+    return;
+  }
+
+  if (action === "delete") {
+    const ok = window.confirm("Supprimer ce mouvement de stock ?");
+    if (!ok) {
+      return;
+    }
+    await api("delete_stock_movement.php", {
+      method: "POST",
+      body: JSON.stringify({ id: m.id })
+    });
+    toast("Mouvement supprimé");
+    await refreshAll();
+    return;
+  }
+
+  if (action === "edit") {
+    const nextDate = window.prompt("Date du mouvement (AAAA-MM-JJ)", m.dateIso || "");
+    if (nextDate === null) {
+      return;
+    }
+    const nextPump = window.prompt("Date du tirage (AAAA-MM-JJ)", m.pumpDateIso || "");
+    if (nextPump === null) {
+      return;
+    }
+    const nextDirRaw = window.prompt("Type : in (entrée) ou out (sortie)", m.direction || "in");
+    if (nextDirRaw === null) {
+      return;
+    }
+    const dir = String(nextDirRaw).trim().toLowerCase();
+    const nextDirection = dir === "out" || dir === "sortie" ? "out" : "in";
+    const nextAmount = window.prompt("Volume (ml)", String(m.amountMl || 0));
+    if (nextAmount === null) {
+      return;
+    }
+
+    await api("update_stock_movement.php", {
+      method: "POST",
+      body: JSON.stringify({
+        id: m.id,
+        date: String(nextDate).trim(),
+        time: m.time || "",
+        direction: nextDirection,
+        amountMl: Number(nextAmount || 0),
+        pumpDate: String(nextPump).trim(),
+        note: ""
+      })
+    });
+    toast("Mouvement modifié");
+    await refreshAll();
+  }
+}
+
+function setupStockHistoryActions() {
+  document.addEventListener("click", async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const button = target.closest(".stock-history-action-btn");
+    if (!(button instanceof HTMLElement)) {
+      return;
+    }
+    if (!document.getElementById("stock-history")?.contains(button)) {
+      return;
+    }
+    const action = button.getAttribute("data-action") || "";
+    const id = button.getAttribute("data-id") || "";
+    if (!action || !id) {
+      return;
+    }
+    try {
+      await handleStockHistoryAction(action, id);
+    } catch (error) {
+      toast(error.message || "Action impossible", true);
     }
   });
 }
@@ -1172,6 +1375,11 @@ async function bootstrap() {
   }
   if (page === "stocks") {
     setupStockForm();
+  }
+  if (page === "stock_history") {
+    setupStockHistorySort();
+    setupStockHistoryFilters();
+    setupStockHistoryActions();
   }
   if (page === "settings") {
     setupSettingsForm();

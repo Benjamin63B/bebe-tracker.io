@@ -27,9 +27,6 @@
         <label>Volume (ml)
           <input type="number" id="stockAmountMl" min="1" step="1" placeholder="ex. 120" required>
         </label>
-        <label>Note (facultatif)
-          <input type="text" id="stockNote" placeholder="Ex: sachet 120ml, décongelé pour biberon...">
-        </label>
         <div class="actions">
           <button type="submit" class="btn-primary">Ajouter mouvement</button>
         </div>
@@ -46,7 +43,6 @@
               <th>Mouvement</th>
               <th>Volume (ml)</th>
               <th>FIFO</th>
-              <th>Note</th>
             </tr>
           </thead>
           <tbody></tbody>
