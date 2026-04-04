@@ -22,7 +22,7 @@ $expiryDate = trim((string)($body['expiryDate'] ?? ''));
 $note = trim((string)($body['note'] ?? ''));
 
 if ($date === '' || $amountMl <= 0) {
-    jsonResponse(['success' => false, 'error' => 'Date et volume sont obligatoires.'], 422);
+    jsonResponse(['success' => false, 'error' => 'Date et volume (supérieur à 0) sont obligatoires.'], 422);
 }
 if (!in_array($direction, ['in', 'out'], true)) {
     jsonResponse(['success' => false, 'error' => 'Type de mouvement invalide.'], 422);
@@ -116,10 +116,12 @@ $movement = [
     'amountMl' => $amountMl,
     'pumpDate' => $pumpDateIso,
     'expiryDate' => $expiryDateIso,
-    'fifoSource' => $fifoSource,
     'note' => $note,
     'createdAt' => gmdate('c'),
 ];
+if ($fifoSource !== null) {
+    $movement['fifoSource'] = $fifoSource;
+}
 
 try {
     $result = firebaseRequest('POST', getConfiguredStocksPath() . '.json', $movement);

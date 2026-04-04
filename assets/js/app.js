@@ -65,12 +65,25 @@ function toast(message, isError = false) {
 
 async function api(path, options = {}) {
   const response = await fetch(`api/${path}`, {
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     ...options
   });
-  const data = await response.json();
+  const text = await response.text();
+  let data = {};
+  if (text.trim() !== "") {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(
+        response.ok
+          ? "Réponse JSON invalide du serveur."
+          : (text.slice(0, 120) || `Erreur HTTP ${response.status}`)
+      );
+    }
+  }
   if (!response.ok || data.success === false) {
-    throw new Error(data.error || "Erreur API");
+    throw new Error(data.error || `Erreur API (${response.status})`);
   }
   return data;
 }
@@ -1097,10 +1110,15 @@ function setupStockForm() {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const amountMl = Number(document.getElementById("stockAmountMl")?.value || 0);
+    if (!Number.isFinite(amountMl) || amountMl <= 0) {
+      toast("Indique un volume supérieur à 0 ml.", true);
+      return;
+    }
     const payload = {
       date: dateInput.value,
       direction: document.getElementById("stockDirection")?.value || "in",
-      amountMl: Number(document.getElementById("stockAmountMl")?.value || 0),
+      amountMl,
       pumpDate: pumpDateInput.value,
       note: String(document.getElementById("stockNote")?.value || "").trim()
     };

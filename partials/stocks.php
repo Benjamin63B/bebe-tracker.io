@@ -11,7 +11,7 @@
         </div>
       </div>
 
-      <form id="stockForm" class="card">
+      <form id="stockForm" class="card" method="post" action="#">
         <label>Date
           <input type="date" id="stockDate" required>
         </label>
@@ -25,7 +25,7 @@
           </select>
         </label>
         <label>Volume (ml)
-          <input type="number" id="stockAmountMl" min="0" step="10" value="0" required>
+          <input type="number" id="stockAmountMl" min="1" step="1" placeholder="ex. 120" required>
         </label>
         <label>Note (facultatif)
           <input type="text" id="stockNote" placeholder="Ex: sachet 120ml, décongelé pour biberon...">
