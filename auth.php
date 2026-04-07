@@ -65,19 +65,17 @@ function authStartSession(): void
 
 function authRead(): array
 {
-    // Firebase storage (primary): /rooms/{roomCode}/security/auth
+    // Firebase (pwdHash) est la source de vérité ; authReadFromFirebase() renvoie passwordSha256.
+    // Ancien bug : on exigeait passwordHash (bcrypt) qui n'est jamais renvoyé → le cache local
+    // restait seul et ignorait les mots de passe mis à jour dans Firebase.
     try {
         $remote = authReadFromFirebase();
-        if (is_array($remote) && isset($remote['passwordHash'])) {
-            if (empty($remote['passwordSha256'])) {
-                $remote['passwordSha256'] = DEFAULT_PASSWORD_SHA256;
-                authWriteToFirebase($remote);
-            }
+        if (is_array($remote) && ($remote['passwordSha256'] ?? '') !== '') {
             authWriteLocalCache($remote);
             return $remote;
         }
     } catch (Throwable $_e) {
-        // Fallback on local cache when Firebase is temporarily unavailable.
+        // Fallback sur le cache local si Firebase est indisponible.
     }
 
     authEnsureStorage();
@@ -98,8 +96,10 @@ function authRead(): array
 
 function authWrite(array $data): void
 {
-    authWriteLocalCache($data);
+    // Firebase d'abord : si l'écriture échoue, on ne met pas à jour le cache local avec un état
+    // que Firebase n'aurait pas (évite désynchronisation au prochain authRead).
     authWriteToFirebase($data);
+    authWriteLocalCache($data);
 }
 
 function authWriteLocalCache(array $data): void

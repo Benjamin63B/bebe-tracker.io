@@ -20,10 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($next !== $confirm) {
         $error = 'La confirmation ne correspond pas.';
     } else {
-        authUpdatePassword($next);
-        $ok = 'Mot de passe mis à jour.';
-        header('Location: index.php');
-        exit;
+        try {
+            authUpdatePassword($next);
+            header('Location: index.php');
+            exit;
+        } catch (Throwable $e) {
+            $error = 'Enregistrement impossible (vérifie la connexion Firebase). ' . $e->getMessage();
+        }
     }
 }
 ?>
