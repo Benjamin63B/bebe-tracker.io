@@ -983,6 +983,7 @@ function setupEntryForm() {
   const noteInput = document.getElementById("entryNote");
   const breastfedFlag = document.getElementById("breastfedFlag");
   const breastfedFlagBottle = document.getElementById("breastfedFlagBottle");
+  const breastfedOnlyFlag = document.getElementById("breastfedOnlyFlag");
   if (!form || !dateInput || !timeInput || !noteInput) {
     return;
   }
@@ -990,7 +991,8 @@ function setupEntryForm() {
   timeInput.value = nowHHMM();
 
   function syncBreastfedNote() {
-    const hasBreastfed = Boolean(breastfedFlag?.checked) || Boolean(breastfedFlagBottle?.checked);
+    const hasBreastfed =
+      Boolean(breastfedFlag?.checked) || Boolean(breastfedFlagBottle?.checked) || Boolean(breastfedOnlyFlag?.checked);
     const note = noteInput.value.trim();
     if (hasBreastfed) {
       if (note === "") {
@@ -1009,6 +1011,9 @@ function setupEntryForm() {
   }
   if (breastfedFlagBottle) {
     breastfedFlagBottle.addEventListener("change", syncBreastfedNote);
+  }
+  if (breastfedOnlyFlag) {
+    breastfedOnlyFlag.addEventListener("change", syncBreastfedNote);
   }
 
   form.addEventListener("submit", async (event) => {

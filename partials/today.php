@@ -1,9 +1,14 @@
     <section id="today" class="page-section">
       <div id="homeHero" class="hero card">
-        <div>
+        <div class="hero-content">
           <p class="hero-badge">Dashboard 2026 - Vue rapide</p>
           <h2>Suivi intelligent de la journée</h2>
           <p class="hero-subtitle">Visualise en un coup d'oeil les tirages, les biberons et la progression du jour.</p>
+          <div class="hero-meta" aria-hidden="true">
+            <span class="hero-meta-pill">Suivi en temps reel</span>
+            <span class="hero-meta-pill">Mise a jour instantanee</span>
+            <span class="hero-meta-pill">Vue ultra rapide</span>
+          </div>
         </div>
         <div class="hero-stats">
           <div class="stat-chip stat-chip-neutral">
@@ -80,6 +85,14 @@
               Tétée associée
             </label>
           </div>
+        </div>
+
+        <div class="block rose">
+          <h3>Tétée 🤱</h3>
+          <label class="toggle inline-toggle">
+            <input type="checkbox" id="breastfedOnlyFlag">
+            Ajouter une entrée tétée (sans ml)
+          </label>
         </div>
 
         <label>Note (facultatif)
