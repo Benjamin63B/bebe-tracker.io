@@ -158,8 +158,11 @@ function renderTodayList(entries) {
     return;
   }
 
+  const isBreastfedEntry = (entry) => /\bt[ée]t[ée]e?\b/i.test(String(entry?.note || ""));
   const milkEntries = entries.filter((entry) => Number(entry.milkPumpedMl || 0) > 0);
-  const bottleEntries = entries.filter((entry) => Number(entry.bottleMl || 0) > 0);
+  const bottleEntries = entries.filter(
+    (entry) => Number(entry.bottleMl || 0) > 0 || (isBreastfedEntry(entry) && Number(entry.milkPumpedMl || 0) <= 0)
+  );
 
   function renderSectionRows(sectionEntries, type) {
     if (!sectionEntries.length) {
@@ -169,11 +172,13 @@ function renderTodayList(entries) {
     return sectionEntries
       .map((entry) => {
         const value = type === "milk" ? `${entry.milkPumpedMl} ml` : `${entry.bottleMl} ml`;
+        const displayValue = type === "bottle" && Number(entry.bottleMl || 0) <= 0 ? "-" : value;
+        const displayNote = entry.note || (isBreastfedEntry(entry) ? "Tétée" : "-");
         return `
         <div class="today-row">
           <strong>${entry.time}</strong>
-          <span>${value}</span>
-          <strong class="note-strong">${entry.note || "-"}</strong>
+          <span>${displayValue}</span>
+          <strong class="note-strong">${displayNote}</strong>
         </div>`;
       })
       .join("");
@@ -259,7 +264,10 @@ function compareHistoryEntries(a, b, sortBy, sortOrder) {
 function renderHistorySplit(entries) {
   const bottleBody = document.querySelector("#historyBottleTable tbody");
   const milkBody = document.querySelector("#historyMilkTable tbody");
-  const bottleRows = entries.filter((e) => Number(e.bottleMl || 0) > 0);
+  const isBreastfedEntry = (entry) => /\bt[ée]t[ée]e?\b/i.test(String(entry?.note || ""));
+  const bottleRows = entries.filter(
+    (e) => Number(e.bottleMl || 0) > 0 || (isBreastfedEntry(e) && Number(e.milkPumpedMl || 0) <= 0)
+  );
   const milkRows = entries.filter((e) => Number(e.milkPumpedMl || 0) > 0);
 
   function actionsCell(entry) {
@@ -294,8 +302,8 @@ function renderHistorySplit(entries) {
       <tr>
         <td class="history-date-cell-muted" aria-hidden="true">—</td>
         <td>${e.time}</td>
-        <td>${e.bottleMl}</td>
-        <td><strong class="note-strong">${e.note || "-"}</strong></td>
+        <td>${Number(e.bottleMl || 0) > 0 ? e.bottleMl : "-"}</td>
+        <td><strong class="note-strong">${e.note || (isBreastfedEntry(e) ? "Tétée" : "-")}</strong></td>
         ${actionsCell(e)}
       </tr>`)
     : "<tr><td colspan='5'>Aucune donnée biberon.</td></tr>";
@@ -327,7 +335,9 @@ function applyHistoryFiltersAndRender() {
   }
 
   if (state.historyQuickFilters.type === "bottle") {
-    rows = rows.filter((e) => Number(e.bottleMl || 0) > 0);
+    rows = rows.filter(
+      (e) => Number(e.bottleMl || 0) > 0 || (/\bt[ée]t[ée]e?\b/i.test(String(e.note || "")) && Number(e.milkPumpedMl || 0) <= 0)
+    );
   } else if (state.historyQuickFilters.type === "milk") {
     rows = rows.filter((e) => Number(e.milkPumpedMl || 0) > 0);
   }
@@ -1018,6 +1028,16 @@ function setupEntryForm() {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const hasBreastfed =
+      Boolean(breastfedFlag?.checked) || Boolean(breastfedFlagBottle?.checked) || Boolean(breastfedOnlyFlag?.checked);
+    if (hasBreastfed) {
+      const note = noteInput.value.trim();
+      if (note === "") {
+        noteInput.value = "Tétée";
+      } else if (!/\bt[ée]t[ée]e?\b/i.test(note)) {
+        noteInput.value = `${note} - Tétée`;
+      }
+    }
     const payload = {
       date: dateInput.value,
       time: timeInput.value,
